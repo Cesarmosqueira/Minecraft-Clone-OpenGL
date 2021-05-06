@@ -17,7 +17,6 @@ float yaw = -90.0f;
 float pitch = 0.0f; 
 float lastx = SCR_WIDTH / 2.0f;
 float lasty = SCR_HEIGHT / 2.0f;
-float fov = 45.0f;
 bool toggle_wireframe = false;
 f32 deltaTime = 0.0f;
 f32 lastFrame = 0.0f;
