@@ -1,5 +1,3 @@
-
-#include "glutil.h"
 #include "pncraft.hpp"
 
        
@@ -84,19 +82,19 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos){
 int main() {
 	GLFWwindow* window = glutilInit(3, 3, SCR_WIDTH, SCR_HEIGHT, "RAAAAAAAAAAAAAAA");
     glEnable(GL_DEPTH_TEST);
-    BlockMesh mesh(1);
-    
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); 
 
+    World world(1);
+
+
     while (!glfwWindowShouldClose(window)) {
-        
         //polling events
         float currentFrame = glfwGetTime(); 
         deltaTime = lastFrame - currentFrame;
         lastFrame = currentFrame;
         if(toggle_wireframe){
-            mesh.toggle_wireframe();
+            world.toggle_wireframe();
             toggle_wireframe = false;
         }
 
@@ -104,7 +102,7 @@ int main() {
 		view  = glm::lookAt(position, position + front, up);
 
 
-		mesh.s()->setMat4("view", view);
+		world.s()->setMat4("view", view);
 
 		processInput(window); 
         glfwSetCursorPosCallback(window, mouse_callback);
@@ -115,15 +113,16 @@ int main() {
         //rendering
 		glClearColor(0.1, 0.2, 0.3, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        mesh.on_update();
+        world.on_update();
 
         glfwGetFramebufferSize(window, &SCR_WIDTH, &SCR_HEIGHT);
-        mesh.update_width_height(SCR_WIDTH, SCR_HEIGHT);
+        world.update_width_height(SCR_WIDTH, SCR_HEIGHT);
 		glfwSwapBuffers(window);
 	}
 
 
     glfwDestroyWindow(window);
+
     glfwTerminate();
 
 	return 0;
