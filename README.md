@@ -8,7 +8,7 @@ cd Minecraft-Clone-OpenGL
 # Controls
 <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> <b>Move</b>
   
-<kbd>Shift</kbd><kbd>Tab</kbd> <b>Fly up and down</b>
+<kbd>Shift</kbd><kbd>Space</kbd> <b>Fly up and down</b>
   
 <kbd>Tab</kbd> <b>Toggle wireframe view</b>
 
