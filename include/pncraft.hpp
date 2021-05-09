@@ -1,28 +1,6 @@
-#include "block.hpp"
+#include "Konstants.hpp"
+#include "Block.hpp"
 #include "IndexBuffer.hpp"
-#include "glutil.h"
-class Block {
-public:
-    glm::mat4 model, projection;
-private:
-    f32 x, y, z;
-    bool solid;
-public:
-    Block() :
-        model(glm::mat4(1.0f)), projection(glm::mat4(1.0f)) {}
-    void load_projection_matrix(const ui32& SCR_WIDTH, const ui32& SCR_HEIGHT){
-        projection = glm::perspective(glm::radians(45.0f), /* size btw [1, 180] */
-            (float)SCR_WIDTH/SCR_HEIGHT, 0.1f, 100.0f);
-    }
-    bool is_solid() const {return solid;}
-    void init(const ui32& x, const ui32& y, const ui32& z, const bool& solid ){
-        this->x = x + 1;
-        this->y = y;
-        this->z = z + 1;
-        this->solid =solid;
-        model = glm::translate(model, glm::vec3(x, y, z));
-    }
-};
 
 class World {
 public:
@@ -44,13 +22,18 @@ private:
 public:
     World(const int& code) : program(new Shader("shaders/coord/")) {
         this->wireframe = false;
-        W = H = 16; /* 16x16 1 dim mesh */
-        D = 256;
+        W = H = 16; /* 32x32x255 chunk */
+        D = 255;
         this->mem_init();
         switch(code){
         case 1: 
             textureID = program->loadTexture("blocks/dirt.jpg");
             std::cout << textureID << " [LOADED] \n";
+            break;
+        case 2:
+            textureID = program->loadTexture("blocks/pn.jpg");
+            std::cout << textureID << " [LOADED] \n";
+
             break;
         }
         blocks_init();
@@ -81,18 +64,19 @@ public:
         for(ui32 z = 0; z < D; z++){
             for(ui32 y = 0; y < H; y++){
                 for(ui32 x = 0; x < W; x++){
-                    blocks[z][y][x].load_projection_matrix(SCR_WIDTH, SCR_HEIGHT);
-                    program->setMat4("model",  blocks[z][y][x].model);
-                    program->setMat4("proj",  blocks[z][y][x].projection);
-
-                    glBindVertexArray(VAO);
-
-                    face_draw_call(UP, x, z, y,'U');
-                    face_draw_call(NORTH, x, z, y,'N');
-                    face_draw_call(EAST, x, z, y,'E');
-                    face_draw_call(WEST,x ,z, y,'W');
-                    face_draw_call(SOUTH, x, z, y,'S');
-                    face_draw_call(DOWN, x, z ,y,'D');
+                    Block* b = &blocks[z][y][x];
+                    b->load_projection_matrix(SCR_WIDTH, SCR_HEIGHT);
+                    program->setMat4("model",  b->model);
+                    program->setMat4("proj",  b->projection);
+                    if(b->is_solid()) { 
+                        glBindVertexArray(VAO);
+                        face_draw_call(UP, x, z, y,'U');
+                        face_draw_call(NORTH, x, z, y,'N');
+                        face_draw_call(EAST, x, z, y,'E');
+                        face_draw_call(WEST,x ,z, y,'W');
+                        face_draw_call(SOUTH, x, z, y,'S');
+                        face_draw_call(DOWN, x, z ,y,'D');
+                    }
                 }
             }
         }
