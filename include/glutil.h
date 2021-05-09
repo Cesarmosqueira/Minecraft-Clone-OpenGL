@@ -15,8 +15,6 @@
 #include <iostream>
 #include <string>
 
-#include <vector>
-
 typedef float  f32;
 typedef double f64;
 
