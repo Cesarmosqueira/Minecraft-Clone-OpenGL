@@ -1,9 +1,9 @@
 # Minecraft-Clone-OpenGL
 <b>To exec:</b>
 ```bash
-  git clone https://github.com/Cesarmosqueira/Minecraft-Clone-OpenGL
-  cd Minecraft-Clone-OpenGL
-  ./compile && ./run
+git clone https://github.com/Cesarmosqueira/Minecraft-Clone-OpenGL
+cd Minecraft-Clone-OpenGL
+./compile && ./run
 ```
 # Controls
 <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> <b>Move</b>
