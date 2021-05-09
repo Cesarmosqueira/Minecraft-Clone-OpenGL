@@ -1,4 +1,5 @@
 # Minecraft-Clone-OpenGL
+<b>To exec:</b>
 ```bash
   git clone https://github.com/Cesarmosqueira/Minecraft-Clone-OpenGL
   cd Minecraft-Clone-OpenGL
