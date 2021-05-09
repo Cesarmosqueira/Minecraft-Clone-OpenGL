@@ -1,3 +1,4 @@
+mkdir bin
 make clean
 make stbi
 make glad
