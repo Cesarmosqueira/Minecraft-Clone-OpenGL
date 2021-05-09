@@ -1,7 +1,7 @@
 # Minecraft-Clone-OpenGL
 <b>To exec:</b>
 ```bash
-git clone https://github.com/Cesarmosqueira/Minecraft-Clone-OpenGL
+git clone https://github.com/Cesarmosqueira/Minecraft-Clone-OpenGL.git
 cd Minecraft-Clone-OpenGL
 ./compile && ./run
 ```
