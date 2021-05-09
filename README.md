@@ -13,3 +13,6 @@
 
 # Screenshot
 ![image](https://user-images.githubusercontent.com/48858334/117560706-ad3b8580-b055-11eb-8fb0-12065deef1cf.png)
+
+# Diagram
+![image](Diagram.jpg)
