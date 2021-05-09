@@ -1,2 +1,15 @@
 # Minecraft-Clone-OpenGL
-![image](https://user-images.githubusercontent.com/48858334/117217110-83b8fa80-adc6-11eb-975e-c3da87526720.png)
+```bash
+  git clone https://github.com/Cesarmosqueira/Minecraft-Clone-OpenGL
+  cd Minecraft-Clone-OpenGL
+  ./compile && ./run
+```
+# Controls
+<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> <b>Move</b>
+  
+<kbd>Shift</kbd><kbd>Tab</kbd> <b>Fly up and down</b>
+  
+<kbd>Tab</kbd> <b>Toggle wireframe view</b>
+
+# Screenshot
+![image](https://user-images.githubusercontent.com/48858334/117560706-ad3b8580-b055-11eb-8fb0-12065deef1cf.png)
