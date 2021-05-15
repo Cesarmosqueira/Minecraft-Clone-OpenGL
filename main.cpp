@@ -12,7 +12,11 @@ float yaw = -90.0f;
 float pitch = 0.0f; 
 float lastx = SCR_WIDTH / 2.0f;
 float lasty = SCR_HEIGHT / 2.0f;
+
 bool toggle_wireframe = false;
+bool shifting = false; 
+bool random_color = false;
+
 f32 deltaTime = 0.0f;
 f32 lastFrame = 0.0f;
 
@@ -49,7 +53,7 @@ void processInput(GLFWwindow* window) {
 		//position[1] -= speed;
         camera.processKeyboard(DOWN, deltaTime);
 	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
 		//position[1] += speed;
         camera.processKeyboard(UP, deltaTime);
 	}
@@ -63,9 +67,17 @@ void processInput(GLFWwindow* window) {
 }
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
-    {
+    if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {
         toggle_wireframe = true;
+    }
+    if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) {
+        shifting = true;
+    }
+    if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) {
+        shifting = false;
+    }
+    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+        random_color = true;
     }
 }
 
@@ -81,27 +93,56 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos){
     xoffset *= sensitivity;
     camera.processMouse(xoffset, yoffset);
 }
+struct RGB {
+    f32 r, g, b;
+    void load(const f32& r, const f32& g, const f32& b) {
+        this->r = r;
+        this->g = g;
+        this->b = b;
+    }
+};
 int main() {
+    std::srand(time(NULL));
     camera.set_speed(speed);
 	GLFWwindow* window = glutilInit(3, 3, SCR_WIDTH, SCR_HEIGHT, "RAAAAAAAAAAAAAAA");
     glEnable(GL_DEPTH_TEST);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    World world(1);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetKeyCallback(window, key_callback);
+    
+    World world(1); /* 0 solid; 1 dirt; 2 not a thing*/
+    //RGB bg; 
+    //bg.load( (rand()%256) / 256.0f, (rand()%256) / 256.0f,(rand()%256) / 256.0f);
     while (!glfwWindowShouldClose(window)) {
+        if(random_color) {
+            //bg.load( (rand()%256) / 256.0f, (rand()%256) / 256.0f,(rand()%256) / 256.0f);
+            random_color = false;
+        }
         //polling events
         float currentFrame = glfwGetTime(); 
+        if (shifting ) {
+            if ( camera.getSpeed() < 50) {
+                camera.getSpeed() +=  3;
+            }
+        }
+        else {
+            if ( 8 < camera.getSpeed() ) 
+                camera.getSpeed() -= 3;
+            else camera.getSpeed() = 8;
+       }
         deltaTime = lastFrame - currentFrame;
         lastFrame = currentFrame;
         if(toggle_wireframe){
             world.toggle_wireframe();
             toggle_wireframe = false;
         }
-		world.s()->setMat4("view",camera.getViewM4());
+        world.send_view_mat(camera.getViewM4());
+		//world.s()->setMat4("view",camera.getViewM4());
 		processInput(window); 
-        glfwSetCursorPosCallback(window, mouse_callback);
-        glfwSetKeyCallback(window, key_callback);
+
+
 		glfwPollEvents();
         
         //rendering
@@ -119,4 +160,4 @@ int main() {
     glfwTerminate();
 
 	return 0;
-}
+} 

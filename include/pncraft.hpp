@@ -18,12 +18,12 @@ private:
     IndexBuffer* WEST;
     IndexBuffer* SOUTH;
     IndexBuffer* DOWN;
-    ui32 W, H, D;
+    ui32 SIDE, HEIGHT;
 public:
     World(const int& code) : program(new Shader("shaders/coord/")) {
         this->wireframe = false;
-        W = H = 16; /* 32x32x255 chunk */
-        D = 255;
+        SIDE = 16; /* 32x32x255 chunk */
+        HEIGHT = 40;
         this->mem_init();
         switch(code){
         case 1: 
@@ -54,6 +54,10 @@ public:
         this->SCR_WIDTH = w;
         this->SCR_HEIGHT = h;
     }
+    void send_view_mat(const glm::mat4& view) {
+        program->setMat4("view",view); 
+        //solid_shader->setMat4("view",view); 
+    }
     void toggle_wireframe() { this->wireframe = !this->wireframe;};
     void on_update() {
         glBindTexture(GL_TEXTURE_2D, textureID);
@@ -61,80 +65,106 @@ public:
         program->useProgram();
         /* commpute matrices to send as uniforms */
         glPolygonMode( GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
-        for(ui32 z = 0; z < D; z++){
-            for(ui32 y = 0; y < H; y++){
-                for(ui32 x = 0; x < W; x++){
-                    Block* b = &blocks[z][y][x];
+
+        glBindVertexArray(VAO);
+        program->setMat4("proj",  blocks[0][0][0].projection);
+        for(ui32 y = 0; y < HEIGHT; y++){
+            for(ui32 x = 0; x < SIDE; x++){
+                for(ui32 z = 0; z < SIDE; z++){
+
+                    Block* b = &blocks[y][x][z];
                     b->load_projection_matrix(SCR_WIDTH, SCR_HEIGHT);
                     program->setMat4("model",  b->model);
-                    program->setMat4("proj",  b->projection);
                     if(b->is_solid()) { 
-                        glBindVertexArray(VAO);
-                        face_draw_call(UP, x, z, y,'U');
-                        face_draw_call(NORTH, x, z, y,'N');
-                        face_draw_call(EAST, x, z, y,'E');
-                        face_draw_call(WEST,x ,z, y,'W');
-                        face_draw_call(SOUTH, x, z, y,'S');
-                        face_draw_call(DOWN, x, z ,y,'D');
+                        face_draw_call(    UP, x,y,z, 'U');
+                        face_draw_call( NORTH, x,y,z, 'N');
+                        face_draw_call(  EAST, x,y,z, 'E');
+                        face_draw_call(  WEST, x,y,z, 'W');
+                        face_draw_call( SOUTH, x,y,z, 'S');
+                        face_draw_call(  DOWN, x,y,z, 'D');
                     }
+
                 }
             }
         }
         /* Send block matrices to shaders */
     }
     void face_draw_call(const IndexBuffer* face, const ui32& x, const ui32& y, const ui32& z, const ui8& code) {
-        if(on_sight(z, x, y, code)){
+        if(!not_visible(x,y,z, code)){
             face->bind();
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         } 
     }
-    bool on_sight(const ui32& x, const ui32& y, const ui32& z, const ui32& dir){ 
+    bool not_visible(const ui32& x, const ui32& y, const ui32& z, const ui32& dir){ 
         if(dir == 'D') {
-            return z == 0;
+            if ( 0 < y ) {
+                return blocks[y-1][x][z].is_solid();
+            }
+            else return false;
+        }
+        if(dir == 'N') { 
+            if ( x < SIDE - 1 ) {
+                return blocks[y][x + 1][z].is_solid();
+            }
+            else return false;
+        }
+        if(dir == 'W') { 
+            if ( z < SIDE - 1 ) {
+                return blocks[y][x][z+1].is_solid();
+            }
+            else return false;
+        }
+        if(dir == 'E') { 
+            if ( 0 < z ) {
+                return blocks[y][x][z-1].is_solid();
+            }
+            return false;
+        }
+        if(dir == 'S') { 
+            if ( 0 < x ) {
+                return blocks[y][x-1][z].is_solid();
+            }
+            else return false;
         }
         if(dir == 'U'){
-            return z == D-1;
+            if ( y < HEIGHT-1 ) { 
+                return blocks[y+1][x][z].is_solid();
+            }
+            else return false;
         }
-        if(dir == 'W') {
-            return y == 0;
-        }
-        if(dir == 'E') {
-            return y == H-1;
-        }
-        if(dir == 'N') {
-            return x == 0;
-        }
-        if(dir == 'S') {
-            return x == W-1;
-        }
-    
-        return true;
+        std::cerr << "Unknown block face\n";
+        return false;
     }
     Shader* s() { return program; }
     void blocks_init() {
         std::cout << "Block mesh size= ";
         ui32 memsize = 0;
-        blocks = new Block**[D];
+        blocks = new Block**[HEIGHT];
         memsize += sizeof(blocks);
-        for(ui32 z = 0; z < D; z++){
-            blocks[z] = new Block*[H];
-            memsize += sizeof(blocks[z]);
-            for(ui32 y = 0; y < H; y++){
-                blocks[z][y] = new Block[W];
-                memsize += sizeof(blocks[z][y]);
-                for(ui32 x = 0; x < W; x++){
-                    blocks[z][y][x].init(x, z, y, 1);
+
+        for(ui32 y = 0; y < HEIGHT; y++){
+
+            blocks[y] = new Block*[SIDE];
+            memsize += sizeof(blocks[y]);
+
+            for(ui32 x = 0; x < SIDE; x++){
+
+                blocks[y][x] = new Block[SIDE];
+                memsize += sizeof(blocks[y][x]);
+
+                for(ui32 z = 0; z < SIDE; z++){
+                    blocks[y][x][z].init(y, x, z, 1);
                 }
             }
         }
         std::cout << memsize << "bytes \n";
     }
     void delete_blocks() {
-        for(ui32 z = 0; z < D; z++){
-            for(ui32 y = 0; y < H; y++){
-                delete[] blocks[z][y];
+        for(ui32 y = 0; y < HEIGHT; y++){
+            for(ui32 x = 0; x < SIDE; x++){
+                delete[] blocks[y][x];
             }
-            delete[] blocks[z];
+            delete[] blocks[y];
         }
         delete[] blocks;
         std::cout << "Blocks deleted succesfully\n";

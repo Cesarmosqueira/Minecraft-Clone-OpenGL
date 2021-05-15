@@ -15,6 +15,8 @@
 #include <iostream>
 #include <string>
 
+#include <time.h>
+
 typedef float  f32;
 typedef double f64;
 

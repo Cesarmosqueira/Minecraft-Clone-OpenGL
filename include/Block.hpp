@@ -14,10 +14,10 @@ public:
             (float)SCR_WIDTH/SCR_HEIGHT, 0.1f, 360.0f);
     }
     bool is_solid() const { return solid; } 
-    void init(const ui32& x, const ui32& y, const ui32& z, const bool& solid ){
-        this->x = x + 1;
+    void init(const ui32& y, const ui32& x, const ui32& z, const bool& solid ){
+        this->x = x;
         this->y = y;
-        this->z = z + 1;
+        this->z = z;
         this->solid =solid;
         model = glm::translate(model, glm::vec3(x, y, z));
     }
