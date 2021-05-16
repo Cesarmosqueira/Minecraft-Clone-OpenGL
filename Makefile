@@ -28,6 +28,16 @@ stbi:
 
 glad:
 	$(CC) -c src/glad.c -I include/ -o bin/glad.o
+znoise: 
+	$(CXX) -o bin/FBM.o 	  	-c src/ZNOISE_SRC/FBM.cpp  				 -I include/ZNOISE_INCLUDE/
+	$(CXX) -o bin/HMF.o 		-c src/ZNOISE_SRC/HybridMultiFractal.cpp -I include/ZNOISE_INCLUDE/
+	$(CXX) -o bin/MixerBase.o 	-c src/ZNOISE_SRC/MixerBase.cpp 		 -I include/ZNOISE_INCLUDE/
+	$(CXX) -o bin/NoiseBase.o 	-c -c src/ZNOISE_SRC/NoiseBase.cpp 		 -I include/ZNOISE_INCLUDE/
+	$(CXX) -o bin/NoiseTools.o -c -c src/ZNOISE_SRC/NoiseTools.cpp 	 -I include/ZNOISE_INCLUDE/
+	$(CXX) -o bin/Perlin.o 	-c -c src/ZNOISE_SRC/Perlin.cpp 		 -I include/ZNOISE_INCLUDE/
+	$(CXX) -o bin/Simplex.o 	-c -c src/ZNOISE_SRC/Simplex.cpp 		 -I include/ZNOISE_INCLUDE/
+	$(CXX) -o bin/Worley.o 	-c -c src/ZNOISE_SRC/Worley.cpp 		 -I include/ZNOISE_INCLUDE/
+
 
 clean: 
 	rm -rf bin/*

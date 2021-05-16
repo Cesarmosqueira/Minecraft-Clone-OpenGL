@@ -85,6 +85,9 @@ public:
 		}
 	}
 
+    glm::vec3& get_position() {
+        return pos;
+    }
 private:
 	void updateVectors() {
 		glm::vec3 temp;

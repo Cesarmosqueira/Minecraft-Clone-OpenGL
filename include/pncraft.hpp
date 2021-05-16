@@ -1,6 +1,8 @@
 #include "Konstants.hpp"
 #include "Block.hpp"
 #include "IndexBuffer.hpp"
+#include "ZNOISE_INCLUDE/Perlin.hpp"
+#include "ZNOISE_INCLUDE/FBM.hpp"
 
 class World {
 public:
@@ -9,7 +11,7 @@ private:
     Shader* program;   
     Block ***blocks;
     ui32 textureID; 
-    ui32 SCR_WIDTH, SCR_HEIGHT;
+    i32 SCR_WIDTH, SCR_HEIGHT;
     ui32 VAO, VBO; 
     /*TODO: Make this IBO's set fancier*/
     IndexBuffer* UP;
@@ -19,11 +21,18 @@ private:
     IndexBuffer* SOUTH;
     IndexBuffer* DOWN;
     ui32 SIDE, HEIGHT;
+    Perlin perlin;
+    FBM* noise;
+    glm::mat4 projection;
 public:
-    World(const int& code) : program(new Shader("shaders/coord/")) {
+    World(const int& code) : 
+        program(new Shader("shaders/coord/")), projection(glm::mat4(1.0f)) {
+
+    
         this->wireframe = false;
-        SIDE = 16; /* 32x32x255 chunk */
-        HEIGHT = 40;
+        SIDE = 150; /* 32x32x255 chunk */
+        HEIGHT = 32;
+        noise = new FBM(perlin);
         this->mem_init();
         switch(code){
         case 1: 
@@ -33,7 +42,6 @@ public:
         case 2:
             textureID = program->loadTexture("blocks/pn.jpg");
             std::cout << textureID << " [LOADED] \n";
-
             break;
         }
         blocks_init();
@@ -49,17 +57,25 @@ public:
         if(SOUTH) delete SOUTH;
         if(DOWN) delete DOWN;
         if(program) delete program;
+        if(noise) delete noise;
     }
     void update_width_height(const int& w, const int& h) {
-        this->SCR_WIDTH = w;
-        this->SCR_HEIGHT = h;
+        if (SCR_WIDTH != w && SCR_HEIGHT != h) {
+            this->SCR_WIDTH = w;
+            this->SCR_HEIGHT = h;
+            projection = glm::perspective(glm::radians(45.0f), /* size btw [1, 180] */
+                (float)SCR_WIDTH/SCR_HEIGHT, 0.1f, 360.0f);
+
+            program->useProgram();
+            program->setMat4("proj", projection);
+        }
     }
     void send_view_mat(const glm::mat4& view) {
         program->setMat4("view",view); 
         //solid_shader->setMat4("view",view); 
     }
     void toggle_wireframe() { this->wireframe = !this->wireframe;};
-    void on_update() {
+    void on_update(const glm::vec3& player_pos) {
         glBindTexture(GL_TEXTURE_2D, textureID);
         /* Enable shader */
         program->useProgram();
@@ -67,21 +83,24 @@ public:
         glPolygonMode( GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 
         glBindVertexArray(VAO);
-        program->setMat4("proj",  blocks[0][0][0].projection);
         for(ui32 y = 0; y < HEIGHT; y++){
             for(ui32 x = 0; x < SIDE; x++){
                 for(ui32 z = 0; z < SIDE; z++){
 
                     Block* b = &blocks[y][x][z];
-                    b->load_projection_matrix(SCR_WIDTH, SCR_HEIGHT);
                     program->setMat4("model",  b->model);
+
+                    
+                    f32 xoff = abs(b->X() - player_pos[0]), zoff = abs(b->Z() - player_pos[2]);
+
                     if(b->is_solid()) { 
-                        face_draw_call(    UP, x,y,z, 'U');
-                        face_draw_call( NORTH, x,y,z, 'N');
-                        face_draw_call(  EAST, x,y,z, 'E');
-                        face_draw_call(  WEST, x,y,z, 'W');
-                        face_draw_call( SOUTH, x,y,z, 'S');
-                        face_draw_call(  DOWN, x,y,z, 'D');
+                        if(xoff < 256 && zoff < 256) {
+                            if ( y < HEIGHT-1) {
+                                if (!blocks[y+1][x][z].is_solid())
+                                    block_draw_call(b);
+                            }
+                        }
+
                     }
 
                 }
@@ -89,8 +108,16 @@ public:
         }
         /* Send block matrices to shaders */
     }
-    void face_draw_call(const IndexBuffer* face, const ui32& x, const ui32& y, const ui32& z, const ui8& code) {
-        if(!not_visible(x,y,z, code)){
+    void block_draw_call(Block* b) {
+        face_draw_call(    UP, b, 'U');
+        face_draw_call( NORTH, b, 'N');
+        face_draw_call(  EAST, b, 'E');
+        face_draw_call(  WEST, b, 'W');
+        face_draw_call( SOUTH, b, 'S');
+        face_draw_call(  DOWN, b, 'D');
+    }
+    void face_draw_call(const IndexBuffer* face, Block* b, const ui8& code) { 
+        if(!not_visible(b->X(), b->Y(), b->Z(), code)){
             face->bind();
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         } 
@@ -153,7 +180,10 @@ public:
                 memsize += sizeof(blocks[y][x]);
 
                 for(ui32 z = 0; z < SIDE; z++){
-                    blocks[y][x][z].init(y, x, z, 1);
+                    float h = noise->Get({(float)x,(float)z}, 0.01f) * (float)HEIGHT/2;
+
+                    bool vis = y < h;
+                    blocks[y][x][z].init(y, x, z, vis);
                 }
             }
         }
@@ -197,6 +227,7 @@ public:
         glEnableVertexAttribArray(2);
 
         glBindVertexArray(0);
+        
     }
 };
     
