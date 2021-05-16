@@ -27,4 +27,16 @@ namespace K {
     const ui32 SOUTH[6]={ 0,  4,  6,   0,  2,  6};
     const ui32 DOWN[6]={ 11, 14, 15,  10, 11, 14};
     const ui32 WEST[6] = { 0,  1,  2,   1,  2,  3 };
+
+    template<typename T> 
+    const T& max(const T& a, const T& b){
+        if(a > b) return a;
+        else return b;
+    }
+
+    template<typename T> 
+    const T& min(const T& a, const T& b){
+        if(a < b) return a;
+        else return b;
+    }
 }

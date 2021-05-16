@@ -9,6 +9,7 @@ public:
     bool wireframe;
 private:
     Shader* program;   
+    ui32 view_distance;
     Block ***blocks;
     ui32 textureID; 
     i32 SCR_WIDTH, SCR_HEIGHT;
@@ -23,15 +24,17 @@ private:
     ui32 SIDE, HEIGHT;
     Perlin perlin;
     FBM* noise;
+
+    Block* b;
     glm::mat4 projection;
 public:
     World(const int& code) : 
         program(new Shader("shaders/coord/")), projection(glm::mat4(1.0f)) {
 
-    
+        view_distance = 48;
         this->wireframe = false;
-        SIDE = 150; /* 32x32x255 chunk */
-        HEIGHT = 32;
+        SIDE = 500; /* 32x32x255 chunk */
+        HEIGHT = 64;
         noise = new FBM(perlin);
         this->mem_init();
         switch(code){
@@ -44,6 +47,8 @@ public:
             std::cout << textureID << " [LOADED] \n";
             break;
         }
+        glBindVertexArray(VAO);
+        glBindTexture(GL_TEXTURE_2D, textureID);
         blocks_init();
     }
     ~World(){
@@ -75,32 +80,36 @@ public:
         //solid_shader->setMat4("view",view); 
     }
     void toggle_wireframe() { this->wireframe = !this->wireframe;};
-    void on_update(const glm::vec3& player_pos) {
-        glBindTexture(GL_TEXTURE_2D, textureID);
+    void on_update(const glm::vec3& pp) {
         /* Enable shader */
         program->useProgram();
         /* commpute matrices to send as uniforms */
         glPolygonMode( GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 
-        glBindVertexArray(VAO);
-        for(ui32 y = 0; y < HEIGHT; y++){
-            for(ui32 x = 0; x < SIDE; x++){
-                for(ui32 z = 0; z < SIDE; z++){
+        i32 sx = K::max<i32>(pp[0] - view_distance, 0);
+        sx = K::min<i32>(sx, SIDE);
 
-                    Block* b = &blocks[y][x][z];
+        i32 lx = K::min<i32>(pp[0] + view_distance, SIDE);
+        lx = K::max<i32>(lx, 0);
+
+        i32 sz = K::max<i32>(pp[2] - view_distance, 0);
+        sz = K::min<i32>(sz, SIDE);
+
+        i32 lz = K::min<i32>(pp[2] + view_distance, SIDE);
+        lz = K::max<i32>(lz, 0);
+
+        for(ui32 y = 0; y < HEIGHT; y++){
+
+            for(ui32 x = sx; x < lx; x++){
+
+                for(ui32 z = sz; z < lz; z++){
+
+                    b = &blocks[y][x][z];
                     program->setMat4("model",  b->model);
 
-                    
-                    f32 xoff = abs(b->X() - player_pos[0]), zoff = abs(b->Z() - player_pos[2]);
-
                     if(b->is_solid()) { 
-                        if(xoff < 256 && zoff < 256) {
-                            if ( y < HEIGHT-1) {
-                                if (!blocks[y+1][x][z].is_solid())
-                                    block_draw_call(b);
-                            }
-                        }
-
+                            //if (!blocks[y+1][x][z].is_solid())
+                        block_draw_call(b);
                     }
 
                 }
