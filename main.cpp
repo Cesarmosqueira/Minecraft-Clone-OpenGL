@@ -175,8 +175,9 @@ int main() {
 	}
 
     glfwDestroyWindow(window);
-
+    std::cout << "Window destroyed\n";
     glfwTerminate();
+    std::cout << "GLFW terminate\n";
 
 	return 0;
 } 

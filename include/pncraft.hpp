@@ -1,8 +1,6 @@
 #include "Konstants.hpp"
-#include "Block.hpp"
 #include "IndexBuffer.hpp"
-#include "ZNOISE_INCLUDE/Perlin.hpp"
-#include "ZNOISE_INCLUDE/FBM.hpp"
+#include "Chunk.hpp"
 
 class World {
 public:
@@ -10,10 +8,10 @@ public:
 private:
     Shader* program;   
     ui32 view_distance;
-    Block ***blocks;
     ui32 textureID; 
     i32 SCR_WIDTH, SCR_HEIGHT;
     ui32 VAO, VBO; 
+    Chunk*** chunks;
     /*TODO: Make this IBO's set fancier*/
     IndexBuffer* UP;
     IndexBuffer* NORTH;
@@ -21,20 +19,25 @@ private:
     IndexBuffer* WEST;
     IndexBuffer* SOUTH;
     IndexBuffer* DOWN;
-    ui32 SIDE, HEIGHT;
+
     Perlin perlin;
     FBM* noise;
-
-    Block* b;
     glm::mat4 projection;
+    ui32 chunks_count;
 public:
     World(const int& code) : 
         program(new Shader("shaders/coord/")), projection(glm::mat4(1.0f)) {
+        chunks_count = 4; 
+        chunks = new Chunk**[chunks_count];
+        for(ui32 i = 0; i < chunks_count; i++) {
+            chunks[i] = new Chunk*[chunks_count];
+            for(ui32 j = 0; j < chunks_count; j++) { 
+                chunks[i][j] = new Chunk(i,j, noise);
+            }
+        }
 
         view_distance = 48;
         this->wireframe = false;
-        SIDE = 500; /* 32x32x255 chunk */
-        HEIGHT = 64;
         noise = new FBM(perlin);
         this->mem_init();
         switch(code){
@@ -49,11 +52,20 @@ public:
         }
         glBindVertexArray(VAO);
         glBindTexture(GL_TEXTURE_2D, textureID);
-        blocks_init();
     }
     ~World(){
         /* clean object */
-        delete_blocks();
+        
+
+        for(ui32 i = 0; i < chunks_count; i++) {
+            for(ui32 j = 0; j < chunks_count; j++) { 
+                delete chunks[i][j];
+            }
+            delete[] chunks[i];
+        }
+        delete[] chunks;
+        std::cout << "Chunks deleted succesfully\n";
+
         if(UP) delete UP;
         if(NORTH) delete NORTH;
         if(EAST) delete EAST;
@@ -63,6 +75,7 @@ public:
         if(DOWN) delete DOWN;
         if(program) delete program;
         if(noise) delete noise;
+        std::cout << "World deleted succesfully\n";
     }
     void update_width_height(const int& w, const int& h) {
         if (SCR_WIDTH != w && SCR_HEIGHT != h) {
@@ -86,52 +99,63 @@ public:
         /* commpute matrices to send as uniforms */
         glPolygonMode( GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 
-        i32 sx = K::max<i32>(pp[0] - view_distance, 0);
-        sx = K::min<i32>(sx, SIDE);
 
-        i32 lx = K::min<i32>(pp[0] + view_distance, SIDE);
+        i32 sx = K::max<i32>(pp[0] - view_distance, 0);
+        sx = K::min<i32>(sx, CHUNK_SIDE);
+
+        i32 lx = K::min<i32>(pp[0] + view_distance, CHUNK_SIDE);
         lx = K::max<i32>(lx, 0);
 
         i32 sz = K::max<i32>(pp[2] - view_distance, 0);
-        sz = K::min<i32>(sz, SIDE);
+        sz = K::min<i32>(sz, CHUNK_SIDE);
 
-        i32 lz = K::min<i32>(pp[2] + view_distance, SIDE);
+        i32 lz = K::min<i32>(pp[2] + view_distance, CHUNK_SIDE);
         lz = K::max<i32>(lz, 0);
 
-        for(ui32 y = 0; y < HEIGHT; y++){
 
-            for(ui32 x = sx; x < lx; x++){
 
-                for(ui32 z = sz; z < lz; z++){
-
-                    b = &blocks[y][x][z];
-                    program->setMat4("model",  b->model);
-
-                    if(b->is_solid()) { 
-                            //if (!blocks[y+1][x][z].is_solid())
-                        block_draw_call(b);
-                    }
-
-                }
+        
+        for(int i = 0; i < 4; i++ ) {
+            for(int j = 0; j < 4; j++ ) {
+                chunk_draw_call(chunks[i][j]->Data());
             }
         }
         /* Send block matrices to shaders */
     }
-    void block_draw_call(Block* b) {
-        face_draw_call(    UP, b, 'U');
-        face_draw_call( NORTH, b, 'N');
-        face_draw_call(  EAST, b, 'E');
-        face_draw_call(  WEST, b, 'W');
-        face_draw_call( SOUTH, b, 'S');
-        face_draw_call(  DOWN, b, 'D');
+
+    void chunk_draw_call(Block*** data) { 
+        for(ui32 y = 0; y < CHUNK_HEIGHT; y++){
+
+            for(ui32 x = 0; x < CHUNK_SIDE; x++){
+
+                for(ui32 z = 0; z < CHUNK_SIDE; z++){
+                    block_draw_call(data, x,y,z);
+                }
+            }
+        }
+
+
     }
-    void face_draw_call(const IndexBuffer* face, Block* b, const ui8& code) { 
-        if(!not_visible(b->X(), b->Y(), b->Z(), code)){
+
+    void block_draw_call(Block***& data, const i32& x, const i32&y, const i32& z) {
+        if ( data[y][x][z].is_solid() ) {
+            program->setMat4("model", data[y][x][z].model);
+            face_draw_call(data,    UP, y,x,z,  'U');
+            face_draw_call(data, NORTH, y,x,z,  'N');
+            face_draw_call(data,  EAST, y,x,z,  'E');
+            face_draw_call(data,  WEST, y,x,z,  'W');
+            face_draw_call(data, SOUTH, y,x,z,  'S');
+            face_draw_call(data,  DOWN, y,x,z,  'D');
+        }
+    }
+    void face_draw_call(Block***& data,const IndexBuffer* face, 
+           const i32& x, const i32&y, const i32& z, const ui8& code) { 
+        if(!not_visible(data, x,y,z, code)){
             face->bind();
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         } 
     }
-    bool not_visible(const ui32& x, const ui32& y, const ui32& z, const ui32& dir){ 
+    bool not_visible(Block***& blocks, const ui32& x, const ui32& y, const ui32& z, const ui32& dir){ 
         if(dir == 'D') {
             if ( 0 < y ) {
                 return blocks[y-1][x][z].is_solid();
@@ -139,13 +163,13 @@ public:
             else return false;
         }
         if(dir == 'N') { 
-            if ( x < SIDE - 1 ) {
+            if ( x < CHUNK_SIDE - 1 ) {
                 return blocks[y][x + 1][z].is_solid();
             }
             else return false;
         }
         if(dir == 'W') { 
-            if ( z < SIDE - 1 ) {
+            if ( z < CHUNK_SIDE - 1 ) {
                 return blocks[y][x][z+1].is_solid();
             }
             else return false;
@@ -163,7 +187,7 @@ public:
             else return false;
         }
         if(dir == 'U'){
-            if ( y < HEIGHT-1 ) { 
+            if ( y < CHUNK_HEIGHT-1 ) { 
                 return blocks[y+1][x][z].is_solid();
             }
             else return false;
@@ -172,42 +196,7 @@ public:
         return false;
     }
     Shader* s() { return program; }
-    void blocks_init() {
-        std::cout << "Block mesh size= ";
-        ui32 memsize = 0;
-        blocks = new Block**[HEIGHT];
-        memsize += sizeof(blocks);
-
-        for(ui32 y = 0; y < HEIGHT; y++){
-
-            blocks[y] = new Block*[SIDE];
-            memsize += sizeof(blocks[y]);
-
-            for(ui32 x = 0; x < SIDE; x++){
-
-                blocks[y][x] = new Block[SIDE];
-                memsize += sizeof(blocks[y][x]);
-
-                for(ui32 z = 0; z < SIDE; z++){
-                    float h = noise->Get({(float)x,(float)z}, 0.01f) * (float)HEIGHT/2;
-
-                    bool vis = y < h;
-                    blocks[y][x][z].init(y, x, z, vis);
-                }
-            }
-        }
-        std::cout << memsize << "bytes \n";
-    }
-    void delete_blocks() {
-        for(ui32 y = 0; y < HEIGHT; y++){
-            for(ui32 x = 0; x < SIDE; x++){
-                delete[] blocks[y][x];
-            }
-            delete[] blocks[y];
-        }
-        delete[] blocks;
-        std::cout << "Blocks deleted succesfully\n";
-    }
+    
     void mem_init(){
 
         glGenVertexArrays(1, &VAO);
