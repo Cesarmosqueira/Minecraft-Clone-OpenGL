@@ -17,7 +17,7 @@ public:
         this->solid =solid;
         model = glm::translate(model, glm::vec3(x, y, z));
     }
-    f32 X() { return this->x; }
-    f32 Y() { return this->y; }
-    f32 Z() { return this->z; }
+    f32& X() { return this->x; }
+    f32& Y() { return this->y; }
+    f32& Z() { return this->z; }
 };

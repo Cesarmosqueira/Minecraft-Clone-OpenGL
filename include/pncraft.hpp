@@ -1,8 +1,19 @@
 #include "Konstants.hpp"
-#include "Block.hpp"
 #include "IndexBuffer.hpp"
-#include "ZNOISE_INCLUDE/Perlin.hpp"
-#include "ZNOISE_INCLUDE/FBM.hpp"
+#include "Chunk.hpp"
+#include <vector>
+
+
+Chunk* find_chunk(const std::vector<Chunk*>& vec, 
+        const i32& x, const i32& z){
+    for(Chunk* c : vec){
+        if (c->X() == x && c->Z() == z){
+            return c;
+        }
+    }
+    return nullptr;
+}
+
 
 class World {
 public:
@@ -10,7 +21,6 @@ public:
 private:
     Shader* program;   
     ui32 view_distance;
-    Block ***blocks;
     ui32 textureID; 
     i32 SCR_WIDTH, SCR_HEIGHT;
     ui32 VAO, VBO; 
@@ -21,21 +31,31 @@ private:
     IndexBuffer* WEST;
     IndexBuffer* SOUTH;
     IndexBuffer* DOWN;
-    ui32 SIDE, HEIGHT;
+    std::vector<Chunk*> chunks;
+    std::vector<Chunk*> MAP;
+
     Perlin perlin;
     FBM* noise;
-
-    Block* b;
     glm::mat4 projection;
+    Chunk* current_chunk, *chunk_aux;
+    f32 max_h;
+    i32 chunking;
+    i32 xChunk, zChunk;
 public:
     World(const int& code) : 
         program(new Shader("shaders/coord/")), projection(glm::mat4(1.0f)) {
+        noise = new FBM(perlin);
+        xChunk = 0;
+        zChunk = 0;
 
+        chunking = 6;
+        max_h = CHUNK_HEIGHT - CHUNK_HEIGHT/4.0f;
+        chunk_update();
+        //init_first_chunks();
+        generate_chunks();
+        
         view_distance = 48;
         this->wireframe = false;
-        SIDE = 500; /* 32x32x255 chunk */
-        HEIGHT = 64;
-        noise = new FBM(perlin);
         this->mem_init();
         switch(code){
         case 1: 
@@ -49,11 +69,15 @@ public:
         }
         glBindVertexArray(VAO);
         glBindTexture(GL_TEXTURE_2D, textureID);
-        blocks_init();
     }
     ~World(){
         /* clean object */
-        delete_blocks();
+        for(int i = 0; i < chunks.size(); i++) {
+            if(chunks[i]) delete chunks[i];
+        }
+        for(int i = 0; i < MAP.size(); i++) {
+            if(MAP[i]) delete MAP[i];
+        }
         if(UP) delete UP;
         if(NORTH) delete NORTH;
         if(EAST) delete EAST;
@@ -63,6 +87,8 @@ public:
         if(DOWN) delete DOWN;
         if(program) delete program;
         if(noise) delete noise;
+        if(chunk_aux) delete chunk_aux;
+        std::cout << "World deleted succesfully\n";
     }
     void update_width_height(const int& w, const int& h) {
         if (SCR_WIDTH != w && SCR_HEIGHT != h) {
@@ -83,87 +109,98 @@ public:
     void on_update(const glm::vec3& pp) {
         /* Enable shader */
         program->useProgram();
+        if (int(pp[0]/CHUNK_SIDE) != xChunk || int(pp[2]/CHUNK_SIDE) != zChunk) {
+            //update xChunk and zChunk
+            xChunk =int(pp[0]/CHUNK_SIDE);
+            zChunk =int(pp[2]/CHUNK_SIDE);
+            chunk_update();
+            generate_chunks();
+        }
         /* commpute matrices to send as uniforms */
         glPolygonMode( GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+        for(Chunk* c : chunks)
+            chunk_draw_call(c->Data());
+        /* Send block matrices to shaders */
+    }
 
-        i32 sx = K::max<i32>(pp[0] - view_distance, 0);
-        sx = K::min<i32>(sx, SIDE);
+    void chunk_draw_call(Block*** data) { 
+        for(i32 y =0 ; y < CHUNK_HEIGHT; y++){
 
-        i32 lx = K::min<i32>(pp[0] + view_distance, SIDE);
-        lx = K::max<i32>(lx, 0);
+            for(i32 x = 0; x < CHUNK_SIDE; x++){
 
-        i32 sz = K::max<i32>(pp[2] - view_distance, 0);
-        sz = K::min<i32>(sz, SIDE);
-
-        i32 lz = K::min<i32>(pp[2] + view_distance, SIDE);
-        lz = K::max<i32>(lz, 0);
-
-        for(ui32 y = 0; y < HEIGHT; y++){
-
-            for(ui32 x = sx; x < lx; x++){
-
-                for(ui32 z = sz; z < lz; z++){
-
-                    b = &blocks[y][x][z];
-                    program->setMat4("model",  b->model);
-
-                    if(b->is_solid()) { 
-                            //if (!blocks[y+1][x][z].is_solid())
-                        block_draw_call(b);
-                    }
-
+                for(i32 z = 0; z < CHUNK_SIDE; z++){
+                    block_draw_call(data, x,y,z);
                 }
             }
         }
-        /* Send block matrices to shaders */
     }
-    void block_draw_call(Block* b) {
-        face_draw_call(    UP, b, 'U');
-        face_draw_call( NORTH, b, 'N');
-        face_draw_call(  EAST, b, 'E');
-        face_draw_call(  WEST, b, 'W');
-        face_draw_call( SOUTH, b, 'S');
-        face_draw_call(  DOWN, b, 'D');
+
+    void block_draw_call(Block*** data, const i32& x, const i32&y, const i32& z) {
+        if ( data[y][x][z].is_solid() ) {
+            face_draw_call(data,    UP, x,y,z , 'U');
+            face_draw_call(data, NORTH, x,y,z , 'N');
+            face_draw_call(data,  EAST, x,y,z , 'E');
+            face_draw_call(data,  WEST, x,y,z , 'W');
+            face_draw_call(data, SOUTH, x,y,z , 'S');
+            if(y > 1) face_draw_call(data,  DOWN, x,y,z , 'D');
+        }
     }
-    void face_draw_call(const IndexBuffer* face, Block* b, const ui8& code) { 
-        if(!not_visible(b->X(), b->Y(), b->Z(), code)){
+    void face_draw_call(Block***& data,const IndexBuffer* face, 
+           const i32& x, const i32&y, const i32& z, const ui8& code) { 
+
+        if(!not_visible(data, x,y,z, code)){
+            program->setMat4("model", data[y][x][z].model);
             face->bind();
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         } 
     }
-    bool not_visible(const ui32& x, const ui32& y, const ui32& z, const ui32& dir){ 
-        if(dir == 'D') {
+    bool not_visible(Block***& blocks, const ui32& x, const ui32& y, const ui32& z, 
+            const ui32& dir){ 
+        if(dir == 'D') { //if in the bottom of the chunk
             if ( 0 < y ) {
                 return blocks[y-1][x][z].is_solid();
             }
             else return false;
         }
+        /* MUST SUPPORT BLOCKS FACING OTHER CHUNKS */
         if(dir == 'N') { 
-            if ( x < SIDE - 1 ) {
+            /* - Validate if its on the border of the current chunk - */
+            if ( x < CHUNK_SIDE - 1 ) {
                 return blocks[y][x + 1][z].is_solid();
             }
-            else return false;
+            else { //its on the border
+                //validate with the adjacent chunk to (x+1)  
+                 
+                return false;
+            }
         }
         if(dir == 'W') { 
-            if ( z < SIDE - 1 ) {
+            if ( z < CHUNK_SIDE - 1 ) {
                 return blocks[y][x][z+1].is_solid();
             }
-            else return false;
+            else {
+                return false;
+            }
         }
         if(dir == 'E') { 
             if ( 0 < z ) {
                 return blocks[y][x][z-1].is_solid();
             }
-            return false;
+            else { 
+                return false;
+            }
         }
         if(dir == 'S') { 
             if ( 0 < x ) {
                 return blocks[y][x-1][z].is_solid();
             }
-            else return false;
+            else {
+                return false;
+            }
         }
-        if(dir == 'U'){
-            if ( y < HEIGHT-1 ) { 
+        /* --------------------------------------- */
+        if(dir == 'U'){ //if its on top of the chunk
+            if ( y < CHUNK_HEIGHT-1 ) { 
                 return blocks[y+1][x][z].is_solid();
             }
             else return false;
@@ -172,44 +209,34 @@ public:
         return false;
     }
     Shader* s() { return program; }
-    void blocks_init() {
-        std::cout << "Block mesh size= ";
-        ui32 memsize = 0;
-        blocks = new Block**[HEIGHT];
-        memsize += sizeof(blocks);
 
-        for(ui32 y = 0; y < HEIGHT; y++){
-
-            blocks[y] = new Block*[SIDE];
-            memsize += sizeof(blocks[y]);
-
-            for(ui32 x = 0; x < SIDE; x++){
-
-                blocks[y][x] = new Block[SIDE];
-                memsize += sizeof(blocks[y][x]);
-
-                for(ui32 z = 0; z < SIDE; z++){
-                    float h = noise->Get({(float)x,(float)z}, 0.01f) * (float)HEIGHT/2;
-
-                    bool vis = y < h;
-                    blocks[y][x][z].init(y, x, z, vis);
-                }
-            }
+    void chunk_update(){
+        //search for chunk in MAP cache
+        chunks.clear();
+        Chunk* act = find_chunk(MAP, xChunk, zChunk);
+        //if current chunk is in cache already, current is replaced
+        if(!act) {
+            act = new Chunk(xChunk, zChunk, noise, max_h);
         }
-        std::cout << memsize << "bytes \n";
+        current_chunk = act;
+        MAP.push_back(act); //map will store all the chunks ever computed
     }
-    void delete_blocks() {
-        for(ui32 y = 0; y < HEIGHT; y++){
-            for(ui32 x = 0; x < SIDE; x++){
-                delete[] blocks[y][x];
+    ///
+    /// Generates adjacents chunks to the actual chunk where the player is standing.
+    ///
+    void generate_chunks() {
+        for(i32 i = current_chunk->X() - chunking; i <= current_chunk->X() + chunking; i++){
+            for(i32 j = current_chunk->Z() - chunking; j <= current_chunk->Z() + chunking; j++){
+                chunk_aux = find_chunk(MAP, i, j);
+                if(!chunk_aux) {
+                    chunk_aux = new Chunk(i,j, noise, max_h);
+                    MAP.push_back(chunk_aux);
+                }
+                chunks.push_back(chunk_aux);
             }
-            delete[] blocks[y];
         }
-        delete[] blocks;
-        std::cout << "Blocks deleted succesfully\n";
     }
     void mem_init(){
-
         glGenVertexArrays(1, &VAO);
         glBindVertexArray(VAO);
 
@@ -228,7 +255,7 @@ public:
         // posiciones
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
-        // colores
+        // shadows
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
         glEnableVertexAttribArray(1);
         // coordenadas de textura
@@ -236,8 +263,5 @@ public:
         glEnableVertexAttribArray(2);
 
         glBindVertexArray(0);
-        
     }
 };
-    
-    
