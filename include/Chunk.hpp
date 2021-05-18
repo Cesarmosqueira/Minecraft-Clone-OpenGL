@@ -21,9 +21,12 @@ public:
                 blocks[y][x] = new Block[CHUNK_SIDE];
 
                 for(ui32 z = 0; z < CHUNK_SIDE; z++){
-            
-                    h = noise->Get({(float)(x+XOFF),(float)(z+ZOFF)}, 0.007f) * max_h;
-                    vis = y && y < h;
+                    if ( y < 10 ) {
+                        vis = true;
+                    } else {
+                        h = noise->Get({(float)(x+XOFF),(float)(z+ZOFF)}, 0.0055f) * max_h;
+                        vis =  y < h;
+                    }
                     blocks[y][x][z].init(y, x + XOFF, z + ZOFF, vis);
 
                 }
@@ -44,13 +47,18 @@ public:
     }
 private:
     void delete_blocks() {
-        for(ui32 y = 0; y < CHUNK_HEIGHT; y++){
-            for(ui32 x = 0; x < CHUNK_SIDE; x++){
-                delete[] blocks[y][x];
+        if(blocks) {
+            for(ui32 y = 0; y < CHUNK_HEIGHT; y++){
+                for(ui32 x = 0; x < CHUNK_SIDE; x++){
+                    if (blocks[y][x]){ 
+                        delete[] blocks[y][x];
+                    }
+                }
+                if(blocks[y]) {
+                    delete[] blocks[y];
+                }
             }
-            delete[] blocks[y];
         }
-        delete[] blocks;
     }
      
 private:

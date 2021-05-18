@@ -21,7 +21,7 @@ public:
 private:
     Shader* program;   
     ui32 view_distance;
-    ui32 textureID; 
+    ui32 DirtTexture, GrassTexture; 
     i32 SCR_WIDTH, SCR_HEIGHT;
     ui32 VAO, VBO; 
     /*TODO: Make this IBO's set fancier*/
@@ -57,27 +57,25 @@ public:
         view_distance = 48;
         this->wireframe = false;
         this->mem_init();
-        switch(code){
-        case 1: 
-            textureID = program->loadTexture("blocks/dirt.jpg");
-            std::cout << textureID << " [LOADED] \n";
-            break;
-        case 2:
-            textureID = program->loadTexture("blocks/pn.jpg");
-            std::cout << textureID << " [LOADED] \n";
-            break;
-        }
+
+        DirtTexture = program->loadTexture("blocks/dirt.jpg");
+        std::cout << DirtTexture << " [LOADED] \n";
+
+        GrassTexture = program->loadTexture("blocks/grass.jpg");
+        std::cout << DirtTexture << " [LOADED] \n";
+
         glBindVertexArray(VAO);
-        glBindTexture(GL_TEXTURE_2D, textureID);
+        glBindTexture(GL_TEXTURE_2D, DirtTexture);
     }
     ~World(){
         /* clean object */
-        for(int i = 0; i < chunks.size(); i++) {
-            if(chunks[i]) delete chunks[i];
+        i32 ms = MAP.size();
+        for(auto c : MAP) {
+            if(c) {
+                delete c;
+            }
         }
-        for(int i = 0; i < MAP.size(); i++) {
-            if(MAP[i]) delete MAP[i];
-        }
+        std::cout << "Destroyed " << ms << " chunks from the chunk cache\n";
         if(UP) delete UP;
         if(NORTH) delete NORTH;
         if(EAST) delete EAST;
@@ -152,6 +150,9 @@ public:
             program->setMat4("model", data[y][x][z].model);
             face->bind();
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            if (code == 'U') { 
+                glBindTexture(GL_TEXTURE, DirtTexture);
+            }
         } 
     }
     bool not_visible(Block***& blocks, const ui32& x, const ui32& y, const ui32& z, 
@@ -200,9 +201,16 @@ public:
         /* --------------------------------------- */
         if(dir == 'U'){ //if its on top of the chunk
             if ( y < CHUNK_HEIGHT-1 ) { 
-                return blocks[y+1][x][z].is_solid();
+                if (! blocks[y+1][x][z].is_solid() ) {
+                    glBindTexture(GL_TEXTURE, GrassTexture);
+                    return false;
+
+                }
+                else return true;
             }
-            else return false;
+            else { 
+                return false;
+            }
         }
         std::cerr << "Unknown block face\n";
         return false;
