@@ -15,8 +15,5 @@ cd Minecraft-Clone-OpenGL
 <kbd>Tab</kbd> <b>Toggle wireframe view</b>
 
 # Screenshots
-![image](https://user-images.githubusercontent.com/48858334/117767916-36d68900-b1f7-11eb-8a1a-26c3670174d0.png)
-![image](https://user-images.githubusercontent.com/48858334/117560706-ad3b8580-b055-11eb-8fb0-12065deef1cf.png)
+![image](https://user-images.githubusercontent.com/48858334/118612690-a57d8e80-b783-11eb-8003-e16f7e382409.png)
 
-# Diagram
-![image](Diagram.jpg)
