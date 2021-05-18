@@ -48,7 +48,7 @@ public:
         xChunk = 0;
         zChunk = 0;
 
-        chunking = 6;
+        chunking = 4;
         max_h = CHUNK_HEIGHT - CHUNK_HEIGHT/4.0f;
         chunk_update();
         //init_first_chunks();
@@ -170,7 +170,6 @@ public:
             }
             else { //its on the border
                 //validate with the adjacent chunk to (x+1)  
-                 
                 return false;
             }
         }
@@ -253,13 +252,13 @@ public:
         DOWN = new IndexBuffer(K::DOWN, 6);
 
         // posiciones
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
         // shadows
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
+        glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
         glEnableVertexAttribArray(1);
         // coordenadas de textura
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(4*sizeof(float)));
         glEnableVertexAttribArray(2);
 
         glBindVertexArray(0);

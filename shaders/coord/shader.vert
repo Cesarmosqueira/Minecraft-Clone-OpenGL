@@ -1,13 +1,13 @@
 #version 330 core
 layout (location = 0) in vec3 vertPos;
-layout (location = 1) in vec3 vertColor;
+layout (location = 1) in float vertColor;
 layout (location = 2) in vec2 myTexCoord;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
 
-out vec3 fragColor;
+out float fragColor;
 out vec2 texCoord;
 
 void main() {
