@@ -24,7 +24,7 @@ public:
                     if ( y < 10 ) {
                         vis = true;
                     } else {
-                        h = noise->Get({(float)(x+XOFF),(float)(z+ZOFF)}, 0.0055f) * max_h;
+                        h = noise->Get({(float)(x+XOFF),(float)(z+ZOFF)}, 0.0055f) * CHUNK_HEIGHT;
                         vis =  y < h;
                     }
                     blocks[y][x][z].init(y, x + XOFF, z + ZOFF, vis);
