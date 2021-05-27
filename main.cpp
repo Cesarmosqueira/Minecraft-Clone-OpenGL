@@ -22,6 +22,8 @@ bool resized = false;
 f32 deltaTime = 0.0f;
 f32 lastFrame = 0.0f;
 
+bool pressed_cursor = true;
+
 //Pos: [46.9726,174.369,-12.9438]
 //LookAt: [-0.700691,-0.632705,0.32972]
 //Up: [-0.572489,0.774393,0.269393]
@@ -78,6 +80,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) {
         shifting = false;
     }
+
+    // for hidden/enable the cursor con the screen
+	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+		if (pressed_cursor == true) {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			pressed_cursor = false;
+		}
+		else {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+			pressed_cursor = true;
+		}
+	}
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos){
