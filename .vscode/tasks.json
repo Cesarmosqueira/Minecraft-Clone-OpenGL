@@ -6,13 +6,11 @@
         {
             "label": "Clean",
             "type": "shell",
-            "command": "DEL /F bin/",
+            "command": "DEL bin",
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
-
-
         },
         {
             "label": "Compile dependencies",
