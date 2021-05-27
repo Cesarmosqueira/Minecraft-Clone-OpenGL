@@ -10,14 +10,15 @@ f32 sensitivity = 0.5f;
 f32 speed = 8.0f;
 
 bool firstMouse = true;
-float yaw = -90.0f; 
-float pitch = 0.0f; 
+// float yaw = -90.0f; 
+// float pitch = 0.0f; 
 float lastx = SCR_WIDTH / 2.0f;
 float lasty = SCR_HEIGHT / 2.0f;
 
 bool toggle_wireframe = false;
 bool shifting = false; 
-bool resized = false;
+
+// bool resized = false;
 
 f32 deltaTime = 0.0f;
 f32 lastFrame = 0.0f;
@@ -32,6 +33,7 @@ Cam camera;
 void showvec3(const glm::vec3& v){
     std::cout << "[" << v[0] << "," << v[1] << "," << v[2] << "]";
 }
+
 void processInput(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
@@ -69,8 +71,8 @@ void processInput(GLFWwindow* window) {
         std::cout << "Up: "; showvec3(inf.up); std::cout << "\n";  
 	}
 }
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {
         toggle_wireframe = true;
     }
@@ -102,17 +104,17 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos){
     }
     f32 xoffset = xpos - lastx;
     f32 yoffset = ypos - lasty;
+
     yoffset *= sensitivity;
     xoffset *= sensitivity;
+
     if (yoffset > 1800) yoffset = 1800;
     camera.processMouse(xoffset, yoffset);
 }
 
-void framebuffer_size_callback(GLFWwindow* window, i32 width, i32 height) {
-	glViewport(0, 0, width, height);
-    resized = true;
-}
-
+/* 
+Moved framebuffer_size_callback to glutil.h to make the main more readable
+*/
 
 struct RGB {
     f32 r, g, b;
@@ -122,10 +124,11 @@ struct RGB {
         this->b = b;
     }
 };
+
 int main() {
     std::srand(time(NULL));
     camera.set_speed(speed);
-	GLFWwindow* window = glutilInit(3, 3, SCR_WIDTH, SCR_HEIGHT, "RAAAAAAAAAAAAAAA");
+	GLFWwindow* window = glutilInit(3, 3, SCR_WIDTH, SCR_HEIGHT, "Minecraft clone!!");
     glEnable(GL_DEPTH_TEST);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -144,9 +147,9 @@ int main() {
         // Measure speed
         double currentTime = glfwGetTime();
         frameCount++;
+
         // If a second has passed.
-        if ( currentTime - previousTime >= 1.0 )
-        {
+        if ( currentTime - previousTime >= 1.0 ) {
             // Display the frame count here any way you want.
             std::cout << "FPS: " << frameCount << "\n";
 
@@ -154,27 +157,34 @@ int main() {
             previousTime = currentTime;
         }
 
-        if (resized) {
-            world.update_width_height(SCR_WIDTH, SCR_HEIGHT);
-        }
+        // put it outside of the if statement because the resized bool has no purpose
+        world.update_width_height(SCR_WIDTH, SCR_HEIGHT);
+
+        // if (resized) {
+        //     world.update_width_height(SCR_WIDTH, SCR_HEIGHT);
+        // }
+
         //polling events
         float currentFrame = glfwGetTime(); 
+
         if (shifting ) {
-            if ( camera.getSpeed() < 50) {
-                camera.getSpeed() +=  3;
-            }
+            if ( camera.getSpeed() < 50)  camera.getSpeed() +=  3;
         }
+
         else {
-            if ( 8 < camera.getSpeed() ) 
-                camera.getSpeed() -= 3;
+            if ( 8 < camera.getSpeed() ) camera.getSpeed() -= 3;
+
             else camera.getSpeed() = 8;
        }
+
         deltaTime = lastFrame - currentFrame;
         lastFrame = currentFrame;
+
         if(toggle_wireframe){
             world.toggle_wireframe();
             toggle_wireframe = false;
         }
+
         world.send_view_mat(camera.getViewM4());
 		processInput(window); 
 
