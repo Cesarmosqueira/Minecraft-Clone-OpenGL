@@ -1,7 +1,8 @@
 #include "pncraft.hpp"
 #include "camera.hpp"
-
-#pragma comment(lib, "glfw3.lib")
+#ifdef _WIN32
+    #pragma comment(lib, "glfw3.lib")
+#endif
        
 int SCR_WIDTH = 960;
 int SCR_HEIGHT = 540;
