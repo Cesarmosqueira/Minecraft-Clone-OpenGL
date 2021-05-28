@@ -21,7 +21,7 @@ bool shifting = false;
 f32 deltaTime = 0.0f;
 f32 lastFrame = 0.0f;
 
-bool pressed_cursor = false, CURSOR_ON = true;
+bool pressed_cursor = false, CURSOR_ON = false;
 
 Cam camera;
 void showvec3(const glm::vec3& v){
