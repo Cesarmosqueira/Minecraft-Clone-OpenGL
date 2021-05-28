@@ -4,17 +4,6 @@
 #include <vector>
 
 
-Chunk* find_chunk(const std::vector<Chunk*>& vec, 
-        const i32& x, const i32& z){
-    for(Chunk* c : vec){
-        if (c->X() == x && c->Z() == z){
-            return c;
-        }
-    }
-    return nullptr;
-}
-
-
 class World {
 public:
     bool wireframe;
@@ -46,6 +35,7 @@ private:
     f32 max_h;
     i32 chunking;
     i32 xChunk, zChunk;
+
 public:
     World(const int& code) : 
         program(new Shader("shaders/coord/")), projection(glm::mat4(1.0f)) {
@@ -93,6 +83,16 @@ public:
         if(chunk_aux) delete chunk_aux;
         std::cout << "World deleted succesfully\n";
     }
+
+    static Chunk* find_chunk(const std::vector<Chunk*>& vec, const i32& x, const i32& z){
+        for(Chunk* c : vec){
+            if (c->X() == x && c->Z() == z){
+                return c;
+            }   
+        }
+        return nullptr;
+    }
+
     void update_width_height(const int& w, const int& h) {
         if (SCR_WIDTH != w && SCR_HEIGHT != h) {
             this->SCR_WIDTH = w;
@@ -104,10 +104,12 @@ public:
             program->setMat4("proj", projection);
         }
     }
+
     void send_view_mat(const glm::mat4& view) {
         program->setMat4("view",view); 
         //solid_shader->setMat4("view",view); 
     }
+
     void toggle_wireframe() { this->wireframe = !this->wireframe;};
 
     void on_update(const glm::vec3& pp) {
@@ -151,6 +153,7 @@ public:
             if(y > 1) face_draw_call(data,  DOWN, x,y,z , 'D');
         }
     }
+
     void face_draw_call(Block***& data,const IndexBuffer* face, 
            const i32& x, const i32&y, const i32& z, const ui8& code) { 
 
@@ -163,6 +166,7 @@ public:
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         } 
     }
+
     bool not_visible(Block***& blocks, const ui32& x, const ui32& y, const ui32& z, 
             const ui32& dir){ 
         if(dir == 'D') { //if in the bottom of the chunk
@@ -223,6 +227,7 @@ public:
         std::cerr << "Unknown block face\n";
         return false;
     }
+
     Shader* s() { return program; }
 
     void chunk_update(){
@@ -251,6 +256,7 @@ public:
             }
         }
     }
+
     void mem_init(){
         glGenVertexArrays(1, &VAO);
         glBindVertexArray(VAO);
