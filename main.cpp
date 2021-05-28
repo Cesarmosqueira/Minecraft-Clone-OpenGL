@@ -11,26 +11,19 @@ f32 sensitivity = 0.5f;
 f32 speed = 8.0f;
 
 bool firstMouse = true;
-// float yaw = -90.0f; 
-// float pitch = 0.0f; 
 float lastx = SCR_WIDTH / 2.0f;
 float lasty = SCR_HEIGHT / 2.0f;
 
 bool toggle_wireframe = false;
 bool shifting = false; 
 
-// bool resized = false;
 
 f32 deltaTime = 0.0f;
 f32 lastFrame = 0.0f;
 
-bool pressed_cursor = true;
+bool pressed_cursor = false, CURSOR_ON = true;
 
-//Pos: [46.9726,174.369,-12.9438]
-//LookAt: [-0.700691,-0.632705,0.32972]
-//Up: [-0.572489,0.774393,0.269393]
 Cam camera;
-
 void showvec3(const glm::vec3& v){
     std::cout << "[" << v[0] << "," << v[1] << "," << v[2] << "]";
 }
@@ -86,14 +79,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
     // for hidden/enable the cursor con the screen
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-		if (pressed_cursor == true) {
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-			pressed_cursor = false;
-		}
-		else {
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-			pressed_cursor = true;
-		}
+        pressed_cursor = true;
 	}
 }
 
@@ -113,23 +99,11 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos){
     camera.processMouse(xoffset, yoffset);
 }
 
-/* 
-Moved framebuffer_size_callback to glutil.h to make the main more readable
-*/
-
-struct RGB {
-    f32 r, g, b;
-    void load(const f32& r, const f32& g, const f32& b) {
-        this->r = r;
-        this->g = g;
-        this->b = b;
-    }
-};
-
 int main() {
     std::srand(time(NULL));
     camera.set_speed(speed);
 	GLFWwindow* window = glutilInit(3, 3, SCR_WIDTH, SCR_HEIGHT, "Minecraft clone!!");
+
     glEnable(GL_DEPTH_TEST);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -145,6 +119,12 @@ int main() {
     int frameCount = 0;
     while (!glfwWindowShouldClose(window)) {
 
+        
+		if (pressed_cursor == true) {
+            CURSOR_ON ^= true;
+			glfwSetInputMode(window, GLFW_CURSOR, CURSOR_ON ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+			pressed_cursor = false;
+		}
         // Measure speed
         double currentTime = glfwGetTime();
         frameCount++;
@@ -158,17 +138,12 @@ int main() {
             previousTime = currentTime;
         }
 
-        // put it outside of the if statement because the resized bool has no purpose
         world.update_width_height(SCR_WIDTH, SCR_HEIGHT);
-
-        // if (resized) {
-        //     world.update_width_height(SCR_WIDTH, SCR_HEIGHT);
-        // }
 
         //polling events
         float currentFrame = glfwGetTime(); 
 
-        if (shifting ) {
+        if ( shifting ) {
             if ( camera.getSpeed() < 50)  camera.getSpeed() +=  3;
         }
 

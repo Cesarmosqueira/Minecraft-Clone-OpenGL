@@ -14,7 +14,7 @@ cd Minecraft-Clone-OpenGL
 
 <kbd>Tab</kbd> <b>Toggle wireframe view</b>
 
-<kbd>C</kbd> <b> View Cursor outside of the window<b/>
+<kbd>C</kbd> <b> Toggle cursor view<b/>
 
 # Screenshots
 ![image](https://user-images.githubusercontent.com/48858334/118612690-a57d8e80-b783-11eb-8003-e16f7e382409.png)
