@@ -24,6 +24,7 @@ private:
     ui32 DirtTexture, GrassTexture; 
     i32 SCR_WIDTH, SCR_HEIGHT;
     ui32 VAO, VBO; 
+
     /*TODO: Make this IBO's set fancier*/
     IndexBuffer* UP;
     IndexBuffer* NORTH;
@@ -31,13 +32,17 @@ private:
     IndexBuffer* WEST;
     IndexBuffer* SOUTH;
     IndexBuffer* DOWN;
+
     std::vector<Chunk*> chunks;
     std::vector<Chunk*> MAP;
 
     Perlin perlin;
     FBM* noise;
+
     glm::mat4 projection;
+
     Chunk* current_chunk, *chunk_aux;
+
     f32 max_h;
     i32 chunking;
     i32 xChunk, zChunk;
@@ -104,6 +109,7 @@ public:
         //solid_shader->setMat4("view",view); 
     }
     void toggle_wireframe() { this->wireframe = !this->wireframe;};
+
     void on_update(const glm::vec3& pp) {
         /* Enable shader */
         program->useProgram();
@@ -135,6 +141,8 @@ public:
 
     void block_draw_call(Block*** data, const i32& x, const i32&y, const i32& z) {
         if ( data[y][x][z].is_solid() ) {
+
+            program->setMat4("model", data[y][x][z].model);
             face_draw_call(data,    UP, x,y,z , 'U');
             face_draw_call(data, NORTH, x,y,z , 'N');
             face_draw_call(data,  EAST, x,y,z , 'E');
@@ -147,12 +155,12 @@ public:
            const i32& x, const i32&y, const i32& z, const ui8& code) { 
 
         if(!not_visible(data, x,y,z, code)){
-            program->setMat4("model", data[y][x][z].model);
+            
             face->bind();
+            //if (code == 'U') { 
+            //    glBindTexture(GL_TEXTURE, DirtTexture);
+            //}
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-            if (code == 'U') { 
-                glBindTexture(GL_TEXTURE, DirtTexture);
-            }
         } 
     }
     bool not_visible(Block***& blocks, const ui32& x, const ui32& y, const ui32& z, 
