@@ -1,4 +1,4 @@
-#include "glutil.h"
+#include "util/glutil.h"
 
 class VertexBuffer {
 public:

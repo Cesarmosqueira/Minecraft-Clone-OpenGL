@@ -1,4 +1,4 @@
-#include "Block.hpp"
+#include "resources/Block.hpp"
 #include "ZNOISE_INCLUDE/Perlin.hpp"
 #include "ZNOISE_INCLUDE/FBM.hpp"
 #define CHUNK_HEIGHT 128

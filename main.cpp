@@ -1,5 +1,5 @@
 #include "pncraft.hpp"
-#include "camera.hpp"
+#include "util/clcamera.hpp"
 #ifdef _WIN32
     #pragma comment(lib, "glfw3.lib")
 #endif

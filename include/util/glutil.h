@@ -8,7 +8,7 @@
 #include <glm/gtc/type_ptr.hpp>
 //#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-#include <path.h>
+#include <renderer/path.h>
 #include <math.h>
 
 #include <fstream>

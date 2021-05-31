@@ -1,6 +1,6 @@
-#include "Konstants.hpp"
-#include "IndexBuffer.hpp"
-#include "Chunk.hpp"
+#include "renderer/Konstants.hpp"
+#include "renderer/IndexBuffer.hpp"
+#include "resources/Chunk.hpp"
 #include <vector>
 
 

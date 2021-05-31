@@ -26,31 +26,31 @@
             "label": "Compile ZNoise",
             "type": "shell",
             "command": [
-                "g++ -o bin/FBM.o         -c src/ZNOISE_SRC/FBM.cpp                -I include/ZNOISE_INCLUDE/ &",
-                "g++ -o bin/HMF.o         -c src/ZNOISE_SRC/HybridMultiFractal.cpp -I include/ZNOISE_INCLUDE/ &",
-                "g++ -o bin/MixerBase.o   -c src/ZNOISE_SRC/MixerBase.cpp          -I include/ZNOISE_INCLUDE/ &",
-                "g++ -o bin/NoiseBase.o   -c -c src/ZNOISE_SRC/NoiseBase.cpp       -I include/ZNOISE_INCLUDE/ &",
-                "g++ -o bin/NoiseTools.o -c -c src/ZNOISE_SRC/NoiseTools.cpp   -I include/ZNOISE_INCLUDE/ &",
-                "g++ -o bin/Perlin.o  -c -c src/ZNOISE_SRC/Perlin.cpp          -I include/ZNOISE_INCLUDE/ &",
-                "g++ -o bin/Simplex.o     -c -c src/ZNOISE_SRC/Simplex.cpp         -I include/ZNOISE_INCLUDE/ &",
-                "g++ -o bin/Worley.o  -c -c src/ZNOISE_SRC/Worley.cpp          -I include/ZNOISE_INCLUDE/"
+                "g++ -o bin/FBM.o         -c src/ZNOISE_SRC/FBM.cpp                -I dependencies/ZNOISE_INCLUDE/ &",
+                "g++ -o bin/HMF.o         -c src/ZNOISE_SRC/HybridMultiFractal.cpp -I dependencies/ZNOISE_INCLUDE/ &",
+                "g++ -o bin/MixerBase.o   -c src/ZNOISE_SRC/MixerBase.cpp          -I dependencies/ZNOISE_INCLUDE/ &",
+                "g++ -o bin/NoiseBase.o   -c -c src/ZNOISE_SRC/NoiseBase.cpp       -I dependencies/ZNOISE_INCLUDE/ &",
+                "g++ -o bin/NoiseTools.o -c -c src/ZNOISE_SRC/NoiseTools.cpp   -I dependencies/ZNOISE_INCLUDE/ &",
+                "g++ -o bin/Perlin.o  -c -c src/ZNOISE_SRC/Perlin.cpp          -I dependencies/ZNOISE_INCLUDE/ &",
+                "g++ -o bin/Simplex.o     -c -c src/ZNOISE_SRC/Simplex.cpp         -I dependencies/ZNOISE_INCLUDE/ &",
+                "g++ -o bin/Worley.o  -c -c src/ZNOISE_SRC/Worley.cpp          -I dependencies/ZNOISE_INCLUDE/"
             ],
-            "dependsOn": "Compile STBI",
+            "dependsOn": "Compile STBI"
 
         },
         {
             "label": "Compile STBI",
             "type": "shell",
-            "command": "g++ -c src/stb_image.c -I include/ -o bin/stbi.o",
-            "dependsOn": "Compile glad",
+            "command": "g++ -c src/stb_image.c -I dependencies/ -o bin/stbi.o",
+            "dependsOn": "Compile glad"
 
         },
 
         {
             "label": "Compile glad",
             "type": "shell",
-            "command": "g++ -c src/glad.c -I include/ -o bin/glad.o",
-            "dependsOn": "Initialize bin folder",
+            "command": "g++ -c src/glad.c -I dependencies/ -o bin/glad.o",
+            "dependsOn": "Initialize bin folder"
 
         },
         {

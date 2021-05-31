@@ -1,7 +1,7 @@
 #ifndef __CAM_H__
 #define __CAM_H__
 
-#include "glutil.h"
+#include "util/glutil.h"
 
 enum CameraMovement {
 	FORWARD, LEFT, BACKWARD, RIGHT, UP, DOWN
@@ -14,7 +14,7 @@ struct Info {
 };
 }
 
-class Cam {
+class Camera {
 	glm::vec3 pos;
 	glm::vec3 lookat;
 	glm::vec3 up;
@@ -27,7 +27,7 @@ class Cam {
 	f32       speed;
 
 public:
-	Cam(f32 px    =   0.0f, f32 py    =   0.0f, f32 pz    =   0.0f,
+	Camera(f32 px    =   0.0f, f32 py    =   0.0f, f32 pz    =   0.0f,
 			f32 fx    =   0.0f, f32 fy    =   0.0f, f32 fz    =  -1.0f,
 			f32 ux    =   0.0f, f32 uy    =   1.0f, f32 uz    =   0.0f,
 			f32 yaw   = -90.0f, f32 pitch =   0.0f, f32 zoom  =  45.0f)
