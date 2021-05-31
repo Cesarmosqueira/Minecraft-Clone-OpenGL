@@ -124,7 +124,7 @@ int main() {
         deltaTime = lastFrame - currentFrame;
         lastFrame = currentFrame;
 
-        if(toggle_wireframe){
+        if(toggle_wireframe) {
             world.toggle_wireframe();
             toggle_wireframe = false;
         }
@@ -132,11 +132,10 @@ int main() {
         world.send_view_mat(Cam::instance.getViewM4());
 		processInput(window); 
 
-
 		glfwPollEvents();
         
         //rendering
-		glClearColor(0.1, 0.2, 0.3, 1.0);
+		glClearColor(0.0, 0.0, 0.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         world.on_update(Cam::instance.get_position());
 
