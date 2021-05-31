@@ -144,7 +144,6 @@ public:
     void block_draw_call(Block*** data, const i32& x, const i32&y, const i32& z) {
         if ( data[y][x][z].is_solid() ) {
 
-            program->setMat4("model", data[y][x][z].model);
             face_draw_call(data,    UP, x,y,z , 'U');
             face_draw_call(data, NORTH, x,y,z , 'N');
             face_draw_call(data,  EAST, x,y,z , 'E');
@@ -159,6 +158,7 @@ public:
 
         if(!not_visible(data, x,y,z, code)){
             
+            program->setMat4("model", data[y][x][z].model);
             face->bind();
             //if (code == 'U') { 
             //    glBindTexture(GL_TEXTURE, DirtTexture);

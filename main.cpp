@@ -1,32 +1,7 @@
-#include "pncraft.hpp"
-#include "util/clcamera.hpp"
 #ifdef _WIN32
     #pragma comment(lib, "glfw3.lib")
 #endif
-       
-int SCR_WIDTH = 960;
-int SCR_HEIGHT = 540;
-bool lbutton_down = false;
-f32 sensitivity = 0.5f;
-f32 speed = 8.0f;
-
-bool firstMouse = true;
-float lastx = SCR_WIDTH / 2.0f;
-float lasty = SCR_HEIGHT / 2.0f;
-
-bool toggle_wireframe = false;
-bool shifting = false; 
-
-
-f32 deltaTime = 0.0f;
-f32 lastFrame = 0.0f;
-
-bool pressed_cursor = false, CURSOR_ON = false;
-
-Cam camera;
-void showvec3(const glm::vec3& v){
-    std::cout << "[" << v[0] << "," << v[1] << "," << v[2] << "]";
-}
+#include "util/info.hpp"       
 
 void processInput(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -35,34 +10,27 @@ void processInput(GLFWwindow* window) {
 
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
 		//position -= speed * front;
-        camera.processKeyboard(FORWARD, deltaTime);
+        Cam::instance.processKeyboard(FORWARD, deltaTime);
 	}
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
 		//position += glm::normalize(glm::cross(front, up)) * speed;
-        camera.processKeyboard(LEFT, deltaTime);
+        Cam::instance.processKeyboard(LEFT, deltaTime);
 	}
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 		//position += speed * front;
-        camera.processKeyboard(BACKWARD, deltaTime);
+        Cam::instance.processKeyboard(BACKWARD, deltaTime);
 	}
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
 		//position -= glm::normalize(glm::cross(front, up)) * speed;
-        camera.processKeyboard(RIGHT, deltaTime);
+        Cam::instance.processKeyboard(RIGHT, deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
 		//position[1] -= speed;
-        camera.processKeyboard(DOWN, deltaTime);
+        Cam::instance.processKeyboard(DOWN, deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
 		//position[1] += speed;
-        camera.processKeyboard(UP, deltaTime);
-	}
-	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
-		//position[1] += speed;
-        C::Info inf = camera.get_info();
-        std::cout << "Pos: "; showvec3(inf.pos); std::cout << "\n";  
-        std::cout << "LookAt: "; showvec3(inf.lookat); std::cout << "\n";  
-        std::cout << "Up: "; showvec3(inf.up); std::cout << "\n";  
+        Cam::instance.processKeyboard(UP, deltaTime);
 	}
 }
 
@@ -84,25 +52,25 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos){
-    if(firstMouse) {
-        lastx = xpos;
-        lasty = ypos;
-        firstMouse = false;
+    if(Cam::firstMouse) {
+        Cam::lastx = xpos;
+        Cam::lasty = ypos;
+        Cam::firstMouse = false;
     }
-    f32 xoffset = xpos - lastx;
-    f32 yoffset = ypos - lasty;
+    f32 xoffset = xpos - Cam::lastx;
+    f32 yoffset = ypos - Cam::lasty;
 
-    yoffset *= sensitivity;
-    xoffset *= sensitivity;
+    yoffset *= Cam::mouse_sensitivity;
+    xoffset *= Cam::mouse_sensitivity;
 
     if (yoffset > 1800) yoffset = 1800;
-    camera.processMouse(xoffset, yoffset);
+    Cam::instance.processMouse(xoffset, yoffset);
 }
 
 int main() {
     std::srand(time(NULL));
-    camera.set_speed(speed);
-	GLFWwindow* window = glutilInit(3, 3, SCR_WIDTH, SCR_HEIGHT, "Minecraft clone!!");
+    Cam::instance.set_speed(movement_speed);
+	GLFWwindow* window = glutilInit(3, 3, Screen::W, Screen::H, "Minecraft clone!!");
 
     glEnable(GL_DEPTH_TEST);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -112,7 +80,7 @@ int main() {
     glfwSetKeyCallback(window, key_callback);
     
     World world(1); /* 0 solid; 1 dirt; 2 not a thing*/
-    world.update_width_height(SCR_WIDTH, SCR_HEIGHT);
+    world.update_width_height(Screen::W, Screen::H);
 
 
     double previousTime = glfwGetTime();
@@ -138,19 +106,19 @@ int main() {
             previousTime = currentTime;
         }
 
-        world.update_width_height(SCR_WIDTH, SCR_HEIGHT);
+        world.update_width_height(Screen::W, Screen::H);
 
         //polling events
         float currentFrame = glfwGetTime(); 
 
         if ( shifting ) {
-            if ( camera.getSpeed() < 50)  camera.getSpeed() +=  3;
+            if ( Cam::instance.getSpeed() < 50)  Cam::instance.getSpeed() +=  3;
         }
 
         else {
-            if ( 8 < camera.getSpeed() ) camera.getSpeed() -= 3;
+            if ( 8 < Cam::instance.getSpeed() ) Cam::instance.getSpeed() -= 3;
 
-            else camera.getSpeed() = 8;
+            else Cam::instance.getSpeed() = 8;
        }
 
         deltaTime = lastFrame - currentFrame;
@@ -161,7 +129,7 @@ int main() {
             toggle_wireframe = false;
         }
 
-        world.send_view_mat(camera.getViewM4());
+        world.send_view_mat(Cam::instance.getViewM4());
 		processInput(window); 
 
 
@@ -170,9 +138,9 @@ int main() {
         //rendering
 		glClearColor(0.1, 0.2, 0.3, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        world.on_update(camera.get_position());
+        world.on_update(Cam::instance.get_position());
 
-        glfwGetFramebufferSize(window, &SCR_WIDTH, &SCR_HEIGHT);
+        glfwGetFramebufferSize(window, &Screen::W, &Screen::H);
 		glfwSwapBuffers(window);
 	}
 
