@@ -17,5 +17,6 @@ cd Minecraft-Clone-OpenGL
 <kbd>C</kbd> <b> Toggle cursor view<b/>
 
 # Screenshots
-![image](https://user-images.githubusercontent.com/48858334/118612690-a57d8e80-b783-11eb-8003-e16f7e382409.png)
+![image](https://user-images.githubusercontent.com/48858334/120355765-2d59b180-c2c9-11eb-80fe-fcdd16054633.png)
+
 
