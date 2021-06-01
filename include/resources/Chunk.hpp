@@ -10,13 +10,13 @@ char tex;
 
 class Chunk { 
 public: 
-    Chunk(const ui32& _x, const ui32& _z, FBM*& noise, const f32& max_h) : XPOS(_x), ZPOS(_z) { 
+    Chunk(const i32& _x, const i32& _z, FBM*& noise, const f32& max_h) : XPOS(_x), ZPOS(_z) { 
         XOFF = XPOS * CHUNK_SIDE;
         ZOFF = ZPOS * CHUNK_SIDE;
 
         for(ui32 x = 0; x < CHUNK_SIDE; x++){
             for(ui32 z = 0; z < CHUNK_SIDE; z++){
-                heightmap[x][z] = noise->Get({(float)(x+XOFF),(float)(z+ZOFF)}, 0.007f) * CHUNK_HEIGHT;
+                heightmap[x][z] = noise->Get({(float)(x+XOFF),(float)(z+ZOFF)}, 0.0055f) * CHUNK_HEIGHT;
             }
         }
 
@@ -33,7 +33,7 @@ public:
                     if(y < heightmap[x][z]){
                         vis = true;
                         tex = 'D';
-                        if(y >= heightmap[x][z]-1 && y > WATER_LEVEL) {
+                        if(y >= heightmap[x][z]-1 && y >= WATER_LEVEL) {
                             tex ='G';
                         }
                     } else vis = false;
@@ -61,10 +61,10 @@ public:
     Block*** Data() {
         return blocks;
     }
-    int X() { 
+    i32 X() { 
         return XPOS;
     }
-    int Z() { 
+    i32 Z() { 
         return ZPOS;
     }
 private:
@@ -84,10 +84,10 @@ private:
     }
      
 private:
-    ui32 XPOS, ZPOS;
+    i32 XPOS, ZPOS;
     Block ***blocks;
     ui32 heightmap[CHUNK_SIDE][CHUNK_SIDE];
 public:
-    ui32 XOFF, ZOFF;
+    i32 XOFF, ZOFF;
 
 };

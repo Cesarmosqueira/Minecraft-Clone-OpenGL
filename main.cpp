@@ -86,6 +86,9 @@ int main() {
     double previousTime = glfwGetTime();
     int frameCount = 0;
     float r = 32/256.0f, g = 38/256.0f, b = 51/256.0f;
+    Cam::instance.get_position()[1] += WATER_LEVEL + 10;
+    Cam::instance.get_position()[0] += CHUNK_SIDE * 30;
+    Cam::instance.get_position()[2] += CHUNK_SIDE * 30;
     while (!glfwWindowShouldClose(window)) {
 
         

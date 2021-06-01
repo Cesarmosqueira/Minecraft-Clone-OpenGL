@@ -10,7 +10,8 @@ public:
 private:
     Shader* program;   
     ui32 view_distance;
-    ui32 DirtTexture, GrassTexture, WaterTexture; 
+    ui32 DirtTexture, WaterTexture; 
+    ui32 GrassTopTexture, GrassSideTexture;
     i32 SCR_WIDTH, SCR_HEIGHT;
     ui32 VAO, VBO; 
 
@@ -56,7 +57,10 @@ public:
         DirtTexture = program->loadTexture("blocks/dirt.jpg");
         std::cout << DirtTexture << " [LOADED] \n";
 
-        GrassTexture = program->loadTexture("blocks/grass.jpg");
+        GrassTopTexture = program->loadTexture("blocks/grassTop.jpg");
+        std::cout << DirtTexture << " [LOADED] \n";
+
+        GrassSideTexture = program->loadTexture("blocks/grassSide.jpg");
         std::cout << DirtTexture << " [LOADED] \n";
 
 
@@ -147,19 +151,34 @@ public:
     void block_draw_call(Block*** data, const i32& x, const i32&y, const i32& z) {
         if ( data[y][x][z].is_solid() ) {
             ui8 code = data[y][x][z].get_TexCode();
-            glBindTexture(GL_TEXTURE_2D, code_to_tex(code));
+            if(code != 'G'){
+                glBindTexture(GL_TEXTURE_2D, code_to_tex(code));
 
-            face_draw_call(data,    UP, x,y,z , 'U');
-            face_draw_call(data, NORTH, x,y,z , 'N');
-            face_draw_call(data,  EAST, x,y,z , 'E');
-            face_draw_call(data,  WEST, x,y,z , 'W');
-            face_draw_call(data, SOUTH, x,y,z , 'S');
-            if(y > 1) face_draw_call(data,  DOWN, x,y,z , 'D');
+                face_draw_call(data,    UP, x,y,z , 'U');
+                face_draw_call(data, NORTH, x,y,z , 'N');
+                face_draw_call(data,  EAST, x,y,z , 'E');
+                face_draw_call(data,  WEST, x,y,z , 'W');
+                face_draw_call(data, SOUTH, x,y,z , 'S');
+                if(y > 1) face_draw_call(data,  DOWN, x,y,z , 'D');
+            } else {
+
+                glBindTexture(GL_TEXTURE_2D, GrassTopTexture);
+                face_draw_call(data,    UP, x,y,z , 'U');
+                glBindTexture(GL_TEXTURE_2D, GrassSideTexture);
+                face_draw_call(data, NORTH, x,y,z , 'N');
+                face_draw_call(data,  EAST, x,y,z , 'E');
+                face_draw_call(data,  WEST, x,y,z , 'W');
+                face_draw_call(data, SOUTH, x,y,z , 'S');
+                if(y > 1){
+                    glBindTexture(GL_TEXTURE_2D, DirtTexture);
+                    face_draw_call(data,  DOWN, x,y,z , 'D');
+                }
+        
+            }
         }
     }
     ui32 code_to_tex(const ui8& code){
         switch(code){
-        case 'G': return GrassTexture;
         case 'W': return WaterTexture;
         case 'D': return DirtTexture;
         }
@@ -225,7 +244,7 @@ public:
         if(dir == 'U'){ //if its on top of the chunk
             if ( y < CHUNK_HEIGHT-1 ) { 
                 if (! blocks[y+1][x][z].is_solid() ) {
-                    glBindTexture(GL_TEXTURE, GrassTexture);
+                    glBindTexture(GL_TEXTURE, GrassTopTexture);
                     return false;
 
                 }
