@@ -1,5 +1,6 @@
 #include "resources/Block.hpp"
 #include "ZNOISE_INCLUDE/Perlin.hpp"
+#include "ZNOISE_INCLUDE/Worley.hpp"
 #include "ZNOISE_INCLUDE/FBM.hpp"
 #define CHUNK_HEIGHT 128
 #define CHUNK_SIDE 16
@@ -40,7 +41,6 @@ public:
                 }
             }
         }
-
         for(ui32 x = 0; x < CHUNK_SIDE; x++){
             for(ui32 z = 0; z < CHUNK_SIDE; z++){
                     

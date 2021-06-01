@@ -25,7 +25,7 @@ private:
     std::vector<Chunk*> chunks;
     std::vector<Chunk*> MAP;
 
-    Perlin perlin;
+    Worley worley;
     FBM* noise;
 
     glm::mat4 projection;
@@ -39,7 +39,7 @@ private:
 public:
     World(const int& code) : 
         program(new Shader("shaders/coord/")), projection(glm::mat4(1.0f)) {
-        noise = new FBM(perlin);
+        noise = new FBM(worley);
         xChunk = 0;
         zChunk = 0;
 
