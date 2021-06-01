@@ -21,7 +21,8 @@ cd Minecraft-Clone-OpenGL
   You'll spawn in chunk (30,30) looking forward. 
   
 # Screenshots
-![image](https://user-images.githubusercontent.com/48858334/120361048-0900d380-c2cf-11eb-9844-f218ab9223ca.png)
+  ![image](https://user-images.githubusercontent.com/48858334/120369156-80873080-c2d8-11eb-956b-7f6c7b4585a7.png)
+
 
 
 
