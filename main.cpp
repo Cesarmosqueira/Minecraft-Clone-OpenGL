@@ -85,6 +85,7 @@ int main() {
 
     double previousTime = glfwGetTime();
     int frameCount = 0;
+    float r = 32/256.0f, g = 38/256.0f, b = 51/256.0f;
     while (!glfwWindowShouldClose(window)) {
 
         
@@ -135,7 +136,7 @@ int main() {
 		glfwPollEvents();
         
         //rendering
-		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glClearColor(r,g,b, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         world.on_update(Cam::instance.get_position());
 
