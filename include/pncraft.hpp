@@ -11,6 +11,7 @@ private:
     Shader* program;   
     ui32 view_distance;
     ui32 DirtTexture, WaterTexture; 
+    ui32 SandTexture;
     ui32 GrassTopTexture, GrassSideTexture;
     i32 SCR_WIDTH, SCR_HEIGHT;
     ui32 VAO, VBO; 
@@ -55,17 +56,14 @@ public:
         this->mem_init();
 
         DirtTexture = program->loadTexture("blocks/dirt.jpg");
-        std::cout << DirtTexture << " [LOADED] \n";
 
         GrassTopTexture = program->loadTexture("blocks/grassTop.jpg");
-        std::cout << DirtTexture << " [LOADED] \n";
 
         GrassSideTexture = program->loadTexture("blocks/grassSide.jpg");
-        std::cout << DirtTexture << " [LOADED] \n";
-
 
         WaterTexture = program->loadTexture("blocks/water.jpg");
-        std::cout << WaterTexture << " [LOADED] \n";
+
+        SandTexture = program->loadTexture("blocks/sand2.jpg");
 
         glBindVertexArray(VAO);
     }
@@ -181,6 +179,7 @@ public:
         switch(code){
         case 'W': return WaterTexture;
         case 'D': return DirtTexture;
+        case 'S': return SandTexture;
         }
         std::cout << "Undefined texture code\n";
         return 1;
