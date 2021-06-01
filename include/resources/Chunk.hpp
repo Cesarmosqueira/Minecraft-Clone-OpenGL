@@ -44,10 +44,14 @@ public:
         for(ui32 x = 0; x < CHUNK_SIDE; x++){
             for(ui32 z = 0; z < CHUNK_SIDE; z++){
                     
-                for(int i = 0; i < WATER_LEVEL; i++){
+                for(int i = 0; i <= WATER_LEVEL; i++){
                     if ( !blocks[i][x][z].Solid() ) {
                         blocks[i][x][z].Solid() = true; //water is a solid tho
                         blocks[i][x][z].get_TexCode() = 'W';
+                    } else {
+                        if(i == WATER_LEVEL){
+                            blocks[i][x][z].get_TexCode() = 'S';
+                        }
                     }
                     
                 }
