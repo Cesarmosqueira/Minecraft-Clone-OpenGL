@@ -10,7 +10,7 @@ public:
 private:
     Shader* program;   
     ui32 view_distance;
-    ui32 DirtTexture, GrassTexture; 
+    ui32 DirtTexture, GrassTexture, WaterTexture; 
     i32 SCR_WIDTH, SCR_HEIGHT;
     ui32 VAO, VBO; 
 
@@ -59,8 +59,11 @@ public:
         GrassTexture = program->loadTexture("blocks/grass.jpg");
         std::cout << DirtTexture << " [LOADED] \n";
 
+
+        WaterTexture = program->loadTexture("blocks/water.jpg");
+        std::cout << WaterTexture << " [LOADED] \n";
+
         glBindVertexArray(VAO);
-        glBindTexture(GL_TEXTURE_2D, DirtTexture);
     }
     ~World(){
         /* clean object */
@@ -143,6 +146,8 @@ public:
 
     void block_draw_call(Block*** data, const i32& x, const i32&y, const i32& z) {
         if ( data[y][x][z].is_solid() ) {
+            ui8 code = data[y][x][z].get_TexCode();
+            glBindTexture(GL_TEXTURE_2D, code_to_tex(code));
 
             face_draw_call(data,    UP, x,y,z , 'U');
             face_draw_call(data, NORTH, x,y,z , 'N');
@@ -152,6 +157,15 @@ public:
             if(y > 1) face_draw_call(data,  DOWN, x,y,z , 'D');
         }
     }
+    ui32 code_to_tex(const ui8& code){
+        switch(code){
+        case 'G': return GrassTexture;
+        case 'W': return WaterTexture;
+        case 'D': return DirtTexture;
+        }
+        std::cout << "Undefined texture code\n";
+        return 1;
+    }
 
     void face_draw_call(Block***& data,const IndexBuffer* face, 
            const i32& x, const i32&y, const i32& z, const ui8& code) { 
@@ -160,9 +174,6 @@ public:
             
             program->setMat4("model", data[y][x][z].model);
             face->bind();
-            //if (code == 'U') { 
-            //    glBindTexture(GL_TEXTURE, DirtTexture);
-            //}
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         } 
     }

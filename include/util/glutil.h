@@ -113,6 +113,10 @@ public:
 	void setMat4(const i8* name, const glm::mat4& mat) const {
 		glUniformMatrix4fv(glGetUniformLocation(pid, name), 1, GL_FALSE, &mat[0][0]);
 	}
+
+	void setFloat(const i8* name, const f32 f) const {
+		glUniform1f(glGetUniformLocation(pid, name), f);
+	}
 	// Texture loading
 	ui32 loadTexture(const std::string& textureFile) {
 		ui32 texture;
