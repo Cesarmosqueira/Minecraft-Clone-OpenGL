@@ -16,7 +16,12 @@ cd Minecraft-Clone-OpenGL
 
 <kbd>C</kbd> <b> Toggle cursor view<b/>
 
+# Important Note:
+**The world is infinite** from the chunk (0,0) to further but not negative coordinates. 
+  You'll spawn in chunk (30,30) looking forward. 
+  
 # Screenshots
-![image](https://user-images.githubusercontent.com/48858334/120355765-2d59b180-c2c9-11eb-80fe-fcdd16054633.png)
+![image](https://user-images.githubusercontent.com/48858334/120361048-0900d380-c2cf-11eb-9844-f218ab9223ca.png)
+
 
 

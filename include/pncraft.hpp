@@ -44,7 +44,7 @@ public:
         xChunk = 0;
         zChunk = 0;
 
-        chunking = 4;
+        chunking = 5;
         max_h = CHUNK_HEIGHT - CHUNK_HEIGHT/4.0f;
         chunk_update();
         //init_first_chunks();
