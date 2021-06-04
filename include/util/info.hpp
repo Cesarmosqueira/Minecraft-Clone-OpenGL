@@ -2,7 +2,6 @@
 #define INFO_HPP
 
 
-#include "pncraft.hpp"
 #include "util/camera.hpp"
 
 namespace Screen {
@@ -18,17 +17,23 @@ namespace Cam {
     float lasty = Screen::H / 2.0f;
 
     Camera instance;
+    f32 movement_speed = 8.0f;
 }
 
-f32 movement_speed = 8.0f;
-
-bool toggle_wireframe = false;
-bool shifting = false; 
 
 
-f32 deltaTime = 0.0f;
-f32 lastFrame = 0.0f;
+namespace MC {
+    bool toggle_wireframe = false;
+    bool shifting = false; 
+    bool pressed_cursor = false, CURSOR_ON = false;
 
-bool pressed_cursor = false, CURSOR_ON = false;
+
+    f32 deltaTime = 0.0f;
+    f32 lastFrame = 0.0f;
+
+    bool resizing = false;
+}
+
+
 
 #endif

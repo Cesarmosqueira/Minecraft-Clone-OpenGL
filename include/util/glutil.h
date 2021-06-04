@@ -30,10 +30,6 @@ typedef unsigned short int ui16;
 typedef unsigned int       ui32;
 typedef unsigned long long ui64;
 
-void framebuffer_size_callback(GLFWwindow* window, i32 width, i32 height) {
-	glViewport(0, 0, width, height);
-    //resized = true;
-}
 
 GLFWwindow* glutilInit(i32 major, i32 minor,
 		i32 width, i32 height,
@@ -101,7 +97,6 @@ public:
 	}
 	~Shader() {
 		glDeleteProgram(pid);
-		glfwTerminate();
 	}
 	void useProgram() {
 		glUseProgram(pid);
