@@ -13,8 +13,8 @@ private:
     ui32 DirtTexture, WaterTexture; 
     ui32 SandTexture;
     ui32 GrassTopTexture, GrassSideTexture;
-    i32 SCR_WIDTH, SCR_HEIGHT;
     ui32 VAO, VBO; 
+    i32 BUFFER_W, BUFFER_H;
 
     /*TODO: Make this IBO's set fancier*/
     IndexBuffer* UP;
@@ -39,8 +39,9 @@ private:
     i32 xChunk, zChunk;
 
 public:
-    World(const int& code) : 
+    World() : 
         program(new Shader("shaders/coord/")), projection(glm::mat4(1.0f)) {
+
         noise = new FBM(worley);
         xChunk = 0;
         zChunk = 0;
@@ -48,13 +49,13 @@ public:
         chunking = 5;
         max_h = CHUNK_HEIGHT - CHUNK_HEIGHT/4.0f;
         chunk_update();
-        //init_first_chunks();
         generate_chunks();
         
         view_distance = 48;
         this->wireframe = false;
         this->mem_init();
 
+        /* TODO: Make this a tilemap */
         DirtTexture = program->loadTexture("blocks/dirt.jpg");
 
         GrassTopTexture = program->loadTexture("blocks/grassTop.jpg");
@@ -63,19 +64,23 @@ public:
 
         WaterTexture = program->loadTexture("blocks/water.jpg");
 
-        SandTexture = program->loadTexture("blocks/sand2.jpg");
+        SandTexture = program->loadTexture("blocks/sand.jpg");
 
         glBindVertexArray(VAO);
     }
+
     ~World(){
         /* clean object */
+        std::cout << "About to destroy chunks\n";
         i32 ms = MAP.size();
         for(auto c : MAP) {
             if(c) {
-                delete c;
+                c = nullptr;
             }
         }
+        MAP.clear();
         std::cout << "Destroyed " << ms << " chunks from the chunk cache\n";
+        delete noise;
         if(UP) delete UP;
         if(NORTH) delete NORTH;
         if(EAST) delete EAST;
@@ -84,9 +89,6 @@ public:
         if(SOUTH) delete SOUTH;
         if(DOWN) delete DOWN;
         if(program) delete program;
-        if(noise) delete noise;
-        if(chunk_aux) delete chunk_aux;
-        std::cout << "World deleted succesfully\n";
     }
 
     static Chunk* find_chunk(const std::vector<Chunk*>& vec, const i32& x, const i32& z){
@@ -98,12 +100,32 @@ public:
         return nullptr;
     }
 
-    void update_width_height(const int& w, const int& h) {
-        if (SCR_WIDTH != w && SCR_HEIGHT != h) {
-            this->SCR_WIDTH = w;
-            this->SCR_HEIGHT = h;
+    void on_update(const glm::vec3& pp, Sun*& sun) {
+        program->useProgram();
+        if (int(pp[0]/CHUNK_SIDE) != xChunk || int(pp[2]/CHUNK_SIDE) != zChunk) {
+            //update xChunk and zChunk
+            xChunk =int(pp[0]/CHUNK_SIDE);
+            zChunk =int(pp[2]/CHUNK_SIDE);
+            chunk_update();
+            generate_chunks();
+        }
+
+        glPolygonMode( GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+        for(Chunk* c : chunks){
+            chunk_draw_call(c->Data());
+        }
+
+        on_sun_update(sun);
+    }
+
+
+    void update_width_height(const i32& w, const i32& h) {
+        if (w != this->BUFFER_W && h != this->BUFFER_H) {
+            std::cout << "Resizing\n";
+            this->BUFFER_W = w;
+            this->BUFFER_H = h;
             projection = glm::perspective(glm::radians(45.0f), /* size btw [1, 180] */
-                (float)SCR_WIDTH/SCR_HEIGHT, 0.1f, 360.0f);
+                (float)w/h, 0.1f, 360.0f);
 
             program->useProgram();
             program->setMat4("proj", projection);
@@ -117,23 +139,7 @@ public:
 
     void toggle_wireframe() { this->wireframe = !this->wireframe;};
 
-    void on_update(const glm::vec3& pp) {
-        /* Enable shader */
-        program->useProgram();
-        if (int(pp[0]/CHUNK_SIDE) != xChunk || int(pp[2]/CHUNK_SIDE) != zChunk) {
-            //update xChunk and zChunk
-            xChunk =int(pp[0]/CHUNK_SIDE);
-            zChunk =int(pp[2]/CHUNK_SIDE);
-            chunk_update();
-            generate_chunks();
-        }
-        /* commpute matrices to send as uniforms */
-        glPolygonMode( GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
-        for(Chunk* c : chunks)
-            chunk_draw_call(c->Data());
-        /* Send block matrices to shaders */
-    }
-
+private:
     void chunk_draw_call(Block*** data) { 
         for(i32 y =0 ; y < CHUNK_HEIGHT; y++){
 
@@ -174,6 +180,22 @@ public:
         
             }
         }
+    }
+    void on_sun_update(Sun*& sun) {
+        program->setMat4("model", sun->model);
+        
+        NORTH->bind();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        EAST->bind();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        UP->bind();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        DOWN->bind();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        WEST->bind();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        SOUTH->bind();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     }
     ui32 code_to_tex(const ui8& code){
         switch(code){
@@ -257,8 +279,6 @@ public:
         return false;
     }
 
-    Shader* s() { return program; }
-
     void chunk_update(){
         //search for chunk in MAP cache
         chunks.clear();
@@ -274,18 +294,19 @@ public:
     /// Generates adjacents chunks to the actual chunk where the player is standing.
     ///
     void generate_chunks() {
+        int total = 0;
         for(i32 i = current_chunk->X() - chunking; i <= current_chunk->X() + chunking; i++){
             for(i32 j = current_chunk->Z() - chunking; j <= current_chunk->Z() + chunking; j++){
                 chunk_aux = find_chunk(MAP, i, j);
                 if(!chunk_aux) {
                     chunk_aux = new Chunk(i,j, noise, max_h);
+                    total++;
                     MAP.push_back(chunk_aux);
-                }
+                } 
                 chunks.push_back(chunk_aux);
             }
         }
     }
-
     void mem_init(){
         glGenVertexArrays(1, &VAO);
         glBindVertexArray(VAO);
@@ -314,4 +335,5 @@ public:
 
         glBindVertexArray(0);
     }
+
 };

@@ -1,9 +1,10 @@
+#ifndef BLOCK_HPP
+#define BLOCK_HPP
 #include "util/glutil.h"
-
 class Block {
 public:
     glm::mat4 model;
-private:
+protected:
     f32 x, y, z;
     bool solid;
     ui8 texCode;
@@ -11,8 +12,9 @@ public:
     Block() :
         model(glm::mat4(1.0f)) {}
     bool is_solid() const { return solid; } 
-    void init(const ui32& y, const ui32& x, const ui32& z, 
+    void init(const f32& y, const f32& x, const f32& z, 
             const bool& solid, const ui8& texture){
+
         this->texCode = texture;
         this->x = x;
         this->y = y;
@@ -26,3 +28,4 @@ public:
     ui8& get_TexCode() { return this->texCode; }
     bool& Solid() { return this->solid; }
 };
+#endif
