@@ -1,7 +1,7 @@
 #version 330 core
 
 in vec3 fragPos;
-in vec3 o_texCoord;
+in vec2 o_texCoord;
 in vec3 Normal;
 
 uniform vec3 xyz;      // light position
@@ -9,7 +9,7 @@ uniform vec3 xyzColor; // light color
 uniform vec3 xyzView;  // camera position
 
 out vec4 color;
-
+uniform sampler2D texture1;
 // PHONG LIGHT
 void main() {
 	// ambient
@@ -30,7 +30,7 @@ void main() {
 	vec3  specular         = specularStrength * spec * xyzColor;
 
     // total (phong)
-	vec3 result    = (ambient + diffuse + specular) * fragColor;
+	vec3 result    = (ambient + diffuse + specular) * vec3(texture(texture1, o_texCoord));
 	color          = vec4(result, 1.0);
 	// color = vec4(ambient*fragColor, 1.0); // solo ambient light
 }

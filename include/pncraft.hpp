@@ -43,7 +43,7 @@ private:
 
 public:
     World() : 
-        block_shader(new Shader("shaders/coord/")), projection(glm::mat4(1.0f)),
+        block_shader(new Shader("shaders/default/")), projection(glm::mat4(1.0f)),
         sun_shader(new Shader("shaders/coord/"))
 
     {
@@ -117,6 +117,7 @@ public:
             chunk_update();
             generate_chunks();
         }
+        block_shader->setVec3("xyz", sun->X(), sun->Y(), sun->Z());
         block_shader->setVec3("xyzColor", lightColor);
         block_shader->setVec3("xyzView", pp);
 
