@@ -112,6 +112,12 @@ public:
 	void setFloat(const i8* name, const f32 f) const {
 		glUniform1f(glGetUniformLocation(pid, name), f);
 	}
+    void setVec3(const i8* name, const glm::vec3& vec) const {
+		glUniform3fv(glGetUniformLocation(pid, name), 1, &vec[0]);
+	}
+	void setVec3(const i8* name, f32 a, f32 b, f32 c) const {
+		glUniform3f(glGetUniformLocation(pid, name), a, b, c);
+	}
 	// Texture loading
 	ui32 loadTexture(const std::string& textureFile) {
 		ui32 texture;

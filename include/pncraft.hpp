@@ -8,7 +8,9 @@ class World {
 public:
     bool wireframe;
 private:
-    Shader* program;   
+    Shader* block_shader;   
+    Shader* sun_shader;
+
     ui32 view_distance;
     ui32 DirtTexture, WaterTexture; 
     ui32 SandTexture;
@@ -31,6 +33,7 @@ private:
     FBM* noise;
 
     glm::mat4 projection;
+    glm::vec3 lightColor;
 
     Chunk* current_chunk, *chunk_aux;
 
@@ -40,7 +43,10 @@ private:
 
 public:
     World() : 
-        program(new Shader("shaders/coord/")), projection(glm::mat4(1.0f)) {
+        block_shader(new Shader("shaders/coord/")), projection(glm::mat4(1.0f)),
+        sun_shader(new Shader("shaders/coord/"))
+
+    {
 
         noise = new FBM(worley);
         xChunk = 0;
@@ -56,15 +62,17 @@ public:
         this->mem_init();
 
         /* TODO: Make this a tilemap */
-        DirtTexture = program->loadTexture("blocks/dirt.jpg");
+        DirtTexture = block_shader->loadTexture("blocks/dirt.jpg");
 
-        GrassTopTexture = program->loadTexture("blocks/grassTop.jpg");
+        GrassTopTexture = block_shader->loadTexture("blocks/grassTop.jpg");
 
-        GrassSideTexture = program->loadTexture("blocks/grassSide.jpg");
+        GrassSideTexture = block_shader->loadTexture("blocks/grassSide.jpg");
 
-        WaterTexture = program->loadTexture("blocks/water.jpg");
+        WaterTexture = block_shader->loadTexture("blocks/water.jpg");
 
-        SandTexture = program->loadTexture("blocks/sand.jpg");
+        SandTexture = block_shader->loadTexture("blocks/sand.jpg");
+
+        lightColor = {1.0f, 1.0f, 1.0f};
 
         glBindVertexArray(VAO);
     }
@@ -88,7 +96,7 @@ public:
         if(EAST) delete EAST;
         if(SOUTH) delete SOUTH;
         if(DOWN) delete DOWN;
-        if(program) delete program;
+        if(block_shader) delete block_shader;
     }
 
     static Chunk* find_chunk(const std::vector<Chunk*>& vec, const i32& x, const i32& z){
@@ -101,7 +109,7 @@ public:
     }
 
     void on_update(const glm::vec3& pp, Sun*& sun) {
-        program->useProgram();
+        block_shader->useProgram();
         if (int(pp[0]/CHUNK_SIDE) != xChunk || int(pp[2]/CHUNK_SIDE) != zChunk) {
             //update xChunk and zChunk
             xChunk =int(pp[0]/CHUNK_SIDE);
@@ -109,6 +117,8 @@ public:
             chunk_update();
             generate_chunks();
         }
+        block_shader->setVec3("xyzColor", lightColor);
+        block_shader->setVec3("xyzView", pp);
 
         glPolygonMode( GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
         for(Chunk* c : chunks){
@@ -127,13 +137,18 @@ public:
             projection = glm::perspective(glm::radians(45.0f), /* size btw [1, 180] */
                 (float)w/h, 0.1f, 360.0f);
 
-            program->useProgram();
-            program->setMat4("proj", projection);
+            block_shader->useProgram();
+            block_shader->setMat4("proj", projection);
+            sun_shader->useProgram();
+            sun_shader->setMat4("proj", projection);
         }
     }
 
     void send_view_mat(const glm::mat4& view) {
-        program->setMat4("view",view); 
+        block_shader->useProgram();
+        block_shader->setMat4("view",view); 
+        sun_shader->useProgram();
+        sun_shader->setMat4("view",view); 
         //solid_shader->setMat4("view",view); 
     }
 
@@ -182,7 +197,8 @@ private:
         }
     }
     void on_sun_update(Sun*& sun) {
-        program->setMat4("model", sun->model);
+        sun_shader->useProgram();
+        sun_shader->setMat4("model", sun->model);
         
         NORTH->bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -212,7 +228,7 @@ private:
 
         if(!not_visible(data, x,y,z, code)){
             
-            program->setMat4("model", data[y][x][z].model);
+            block_shader->setMat4("model", data[y][x][z].model);
             face->bind();
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         } 
@@ -324,14 +340,17 @@ private:
         DOWN = new IndexBuffer(K::DOWN, 6);
 
         // posiciones
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
         // shadows
-        glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
+        glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)(3*sizeof(float)));
         glEnableVertexAttribArray(1);
         // coordenadas de textura
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(4*sizeof(float)));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)(4*sizeof(float)));
         glEnableVertexAttribArray(2);
+        //normal
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)(6*sizeof(float)));
+        glEnableVertexAttribArray(3);
 
         glBindVertexArray(0);
     }
