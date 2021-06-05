@@ -10,6 +10,7 @@ uniform vec3 xyzView;  // camera position
 
 out vec4 color;
 
+// PHONG LIGHT
 void main() {
 	// ambient
 	float strength = 0.1;
