@@ -13,7 +13,8 @@ private:
 
     ui32 view_distance;
     ui32 DirtTexture, WaterTexture; 
-    ui32 SandTexture;
+    ui32 SandTexture, SunTexture;
+
     ui32 GrassTopTexture, GrassSideTexture;
     ui32 VAO, VBO; 
     i32 BUFFER_W, BUFFER_H;
@@ -72,6 +73,8 @@ public:
 
         SandTexture = block_shader->loadTexture("blocks/sand.jpg");
 
+        SunTexture = block_shader->loadTexture("sun.jpg");
+
         lightColor = {1.0f, 1.0f, 1.0f};
 
         glBindVertexArray(VAO);
@@ -123,7 +126,7 @@ public:
 
         glPolygonMode( GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
         for(Chunk* c : chunks){
-            chunk_draw_call(c->Data());
+            chunk_draw_call(c->Data(), c->heightmap);
         }
 
         on_sun_update(sun);
@@ -150,20 +153,18 @@ public:
         block_shader->setMat4("view",view); 
         sun_shader->useProgram();
         sun_shader->setMat4("view",view); 
-        //solid_shader->setMat4("view",view); 
     }
 
     void toggle_wireframe() { this->wireframe = !this->wireframe;};
 
 private:
-    void chunk_draw_call(Block*** data) { 
-        for(i32 y =0 ; y < CHUNK_HEIGHT; y++){
-
-            for(i32 x = 0; x < CHUNK_SIDE; x++){
-
-                for(i32 z = 0; z < CHUNK_SIDE; z++){
-                    block_draw_call(data, x,y,z);
-                }
+    void chunk_draw_call(Block*** data, i32 hm[CHUNK_SIDE][CHUNK_SIDE]) { 
+        i32 s;
+        for(i32 x = 0; x < CHUNK_SIDE; x++){
+            for(i32 z = 0; z < CHUNK_SIDE; z++){
+                s = hm[x][z];
+                block_draw_call(data, x,(s-1 >= 0) ? s-1 : 0,z);
+                block_draw_call(data, x,WATER_LEVEL,z);
             }
         }
     }
@@ -200,7 +201,7 @@ private:
     void on_sun_update(Sun*& sun) {
         sun_shader->useProgram();
         sun_shader->setMat4("model", sun->model);
-        
+        glBindTexture(GL_TEXTURE_2D, SunTexture);
         NORTH->bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         EAST->bind();
@@ -341,17 +342,14 @@ private:
         DOWN = new IndexBuffer(K::DOWN, 6);
 
         // posiciones
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
         // shadows
-        glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)(3*sizeof(float)));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
         glEnableVertexAttribArray(1);
-        // coordenadas de textura
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)(4*sizeof(float)));
-        glEnableVertexAttribArray(2);
         //normal
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)(6*sizeof(float)));
-        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(5*sizeof(float)));
+        glEnableVertexAttribArray(2);
 
         glBindVertexArray(0);
     }

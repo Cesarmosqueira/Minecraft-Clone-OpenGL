@@ -82,7 +82,7 @@ public:
 private:
     i32 XPOS, ZPOS;
     Block ***blocks;
-    i32 heightmap[CHUNK_SIDE][CHUNK_SIDE];
 public:
+    i32 heightmap[CHUNK_SIDE][CHUNK_SIDE];
     i32 XOFF, ZOFF;
 };

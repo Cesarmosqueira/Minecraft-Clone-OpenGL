@@ -13,7 +13,7 @@ uniform sampler2D texture1;
 // PHONG LIGHT
 void main() {
 	// ambient
-	float strength = 0.1;
+	float strength = 0.3;
 	vec3 ambient   = strength * xyzColor;
 
 	// diffuse

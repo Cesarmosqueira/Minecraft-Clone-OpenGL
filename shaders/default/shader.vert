@@ -1,8 +1,7 @@
 #version 330 core
 layout (location = 0) in vec3  vertPos;
-layout (location = 1) in float shadowModifier;
-layout (location = 2) in vec3  texCoord;
-layout (location = 3) in vec3  vertNormal;
+layout (location = 1) in vec3  texCoord;
+layout (location = 2) in vec3  vertNormal;
 
 out vec3 fragPos;
 out vec2 o_texCoord;

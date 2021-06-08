@@ -16,6 +16,7 @@
 #include <string>
 
 #include <time.h>
+#include <unordered_map>
 
 typedef float  f32;
 typedef double f64;
@@ -24,6 +25,7 @@ typedef char      i8;
 typedef short int i16;
 typedef int       i32;
 typedef long long i64;
+typedef std::unordered_map<std::string, i32> U_Tree;
 
 typedef unsigned char      ui8;
 typedef unsigned short int ui16;
@@ -64,6 +66,7 @@ class Shader {
 
 	i32 ok;             // check for error status
 	i8 infoLog[512];  // get error status info
+    mutable U_Tree uniforms_cache;
 
 public:
 	Shader(const std::string& shader_folder, std::string texture_folder="assets/textures/")
@@ -104,19 +107,27 @@ public:
 	ui32 getProgram() { // might need to refactor this later ughhh
 		return pid;
 	}
+    // retreive uniforms
+    GLint selfGetUniformLocation(const i8* name) const {
+        if(uniforms_cache.find(name) != uniforms_cache.end())
+            return uniforms_cache[name];
+        GLuint loc = glGetUniformLocation(pid, name);
+        uniforms_cache[name] = loc; 
+        return loc;
+    }
 	// Set uniforms
 	void setMat4(const i8* name, const glm::mat4& mat) const {
-		glUniformMatrix4fv(glGetUniformLocation(pid, name), 1, GL_FALSE, &mat[0][0]);
+		glUniformMatrix4fv(selfGetUniformLocation(name), 1, GL_FALSE, &mat[0][0]);
 	}
 
 	void setFloat(const i8* name, const f32 f) const {
-		glUniform1f(glGetUniformLocation(pid, name), f);
+		glUniform1f(selfGetUniformLocation(name), f);
 	}
     void setVec3(const i8* name, const glm::vec3& vec) const {
-		glUniform3fv(glGetUniformLocation(pid, name), 1, &vec[0]);
+		glUniform3fv(selfGetUniformLocation(name), 1, &vec[0]);
 	}
 	void setVec3(const i8* name, f32 a, f32 b, f32 c) const {
-		glUniform3f(glGetUniformLocation(pid, name), a, b, c);
+		glUniform3f(selfGetUniformLocation(name), a, b, c);
 	}
 	// Texture loading
 	ui32 loadTexture(const std::string& textureFile) {
