@@ -10,6 +10,19 @@ public:
         this->model = glm::scale(this->model, {30,30,30});
     }
     
+    void rotation (){
+        i8 ex = 0;
+        if(ex < 5) {
+            ex++;
+            model = glm::translate(model, glm::vec3(1, 0, 0));
+        } else {
+            ex--;
+            model = glm::translate(model, glm::vec3(-1, 0, 0));
+        }
+        //std::cout << ex << "\n";
+
+
+    }
 
 };
 

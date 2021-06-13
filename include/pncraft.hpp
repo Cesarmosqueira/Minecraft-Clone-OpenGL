@@ -41,6 +41,7 @@ private:
     f32 max_h;
     i32 chunking;
     i32 xChunk, zChunk;
+    ui32 current_frame = 0;
 
 public:
     World() : 
@@ -111,7 +112,8 @@ public:
         return nullptr;
     }
 
-    void on_update(const glm::vec3& pp, Sun*& sun) {
+    void on_update(const glm::vec3& pp, Sun*& sun, const glm::mat4& camView) {
+        current_frame++;
         block_shader->useProgram();
         if (int(pp[0]/CHUNK_SIDE) != xChunk || int(pp[2]/CHUNK_SIDE) != zChunk) {
             //update xChunk and zChunk
@@ -120,15 +122,16 @@ public:
             chunk_update();
             generate_chunks();
         }
+        sun->X() = 2.0f * (cos(current_frame) + sin(current_frame));
+		sun->Z() = 2.0f * (cos(current_frame) - sin(current_frame));
         block_shader->setVec3("xyz", sun->X(), sun->Y(), sun->Z());
         block_shader->setVec3("xyzColor", lightColor);
-        block_shader->setVec3("xyzView", pp);
+        block_shader->setMat4("xyzView", camView);
 
         glPolygonMode( GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
         for(Chunk* c : chunks){
             chunk_draw_call(c->Data(), c->heightmap);
         }
-
         on_sun_update(sun);
     }
 
@@ -200,6 +203,7 @@ private:
     }
     void on_sun_update(Sun*& sun) {
         sun_shader->useProgram();
+        sun->rotation();
         sun_shader->setMat4("model", sun->model);
         glBindTexture(GL_TEXTURE_2D, SunTexture);
         NORTH->bind();
@@ -227,9 +231,16 @@ private:
 
     void face_draw_call(Block***& data,const IndexBuffer* face, 
            const i32& x, const i32&y, const i32& z, const ui8& code) { 
-
+        
         if(!not_visible(data, x,y,z, code)){
-            
+            switch(code){
+            case 'N': block_shader->setVec3("normal", { 1, 0, 0} ); break;
+            case 'E': block_shader->setVec3("normal", { 0, 0,-1} ); break;
+            case 'U': block_shader->setVec3("normal", { 0, 1, 0} ); break;
+            case 'D': block_shader->setVec3("normal", { 0,-1, 0} ); break;
+            case 'W': block_shader->setVec3("normal", { 0, 0, 1} ); break;
+            case 'S': block_shader->setVec3("normal", {-1, 0, 0} ); break;
+            }
             block_shader->setMat4("model", data[y][x][z].model);
             face->bind();
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
