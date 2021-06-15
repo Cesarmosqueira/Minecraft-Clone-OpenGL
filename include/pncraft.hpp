@@ -47,7 +47,6 @@ public:
     World() : 
         block_shader(new Shader("shaders/default/")), projection(glm::mat4(1.0f)),
         sun_shader(new Shader("shaders/coord/"))
-
     {
 
         noise = new FBM(worley);
@@ -116,6 +115,7 @@ public:
         current_frame++;
         block_shader->useProgram();
         if (int(pp[0]/CHUNK_SIDE) != xChunk || int(pp[2]/CHUNK_SIDE) != zChunk) {
+            std::cout << "Chunks cached: " << (sizeof(MAP)/1024.0f)/1024.0f << "MB\n";
             //update xChunk and zChunk
             xChunk =int(pp[0]/CHUNK_SIDE);
             zChunk =int(pp[2]/CHUNK_SIDE);

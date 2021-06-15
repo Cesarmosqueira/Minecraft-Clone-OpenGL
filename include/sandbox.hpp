@@ -103,7 +103,7 @@ public:
 		glfwSwapBuffers(window);
     }
     void on_gui_update(){
-        std::cout << " " << FPS << "\n";
+        //std::cout << " " << FPS << "\n";
     }
 
 private:
