@@ -44,10 +44,11 @@ private:
     ui32 current_frame = 0;
 
 public:
-    World() : 
-        block_shader(new Shader("shaders/default/")), projection(glm::mat4(1.0f)),
-        sun_shader(new Shader("shaders/coord/"))
+    World() 
     {
+        block_shader = new Shader("shaders/default/");
+        projection = glm::mat4(1.0f);
+        sun_shader = new Shader("shaders/coord/");
 
         noise = new FBM(worley);
         xChunk = 0;
