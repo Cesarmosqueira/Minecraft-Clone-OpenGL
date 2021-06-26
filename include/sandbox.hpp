@@ -99,6 +99,7 @@ public:
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         world->on_update(Cam::instance.get_position(), sun, Cam::instance.getViewM4());
 
+
         glfwGetFramebufferSize(window, &Screen::W, &Screen::H);
 		glfwSwapBuffers(window);
     }

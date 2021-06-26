@@ -5,7 +5,7 @@ RM  := rm -rf
 MD  := mkdir -p
 
 CXXFLAGS += -std=c++17 -pedantic -Wall -O3
-LDFLAGS += -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl
+LDFLAGS += -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lassimp
 
 CPPFLAGS += -I include/ -I dependencies/
 #all: dirs bin/program

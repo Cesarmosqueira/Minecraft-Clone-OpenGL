@@ -16,6 +16,7 @@ ui32 TextureFromFile(const std::string& fileName, i32 param = GL_LINEAR) {
 	i32 w, h, nrChannels;
 
 	//stbi_set_flip_vertically_on_load(true); // porque en opgl el eje Y invertio
+    std::cout << "Loading from: " << fileName << "\n";
 	ui8* data = stbi_load(fileName.c_str(), &w, &h, &nrChannels, 0);
 	if (data == nullptr) {
 		std::cerr << "Can't load texture\n";
@@ -167,4 +168,3 @@ class Model {
 };
 
 #endif
-

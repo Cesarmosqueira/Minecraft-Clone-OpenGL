@@ -1,6 +1,8 @@
 #include "renderer/Konstants.hpp"
 #include "renderer/IndexBuffer.hpp"
 #include "resources/Chunk.hpp"
+#include "renderer/Model.hpp"
+#include "util/Files.hpp"
 #include <vector>
 
 
@@ -10,6 +12,12 @@ public:
 private:
     Shader* block_shader;   
     Shader* sun_shader;
+
+    /* Monito */
+    Shader* monito_shader;
+    Model* monito_model;
+    Files* monito_files;
+    glm::mat4 monito_MM;
 
     ui32 view_distance;
     ui32 DirtTexture, WaterTexture; 
@@ -44,11 +52,22 @@ private:
     ui32 current_frame = 0;
 
 public:
-    World() 
-    {
-        block_shader = new Shader("shaders/default/");
+    World() {
         projection = glm::mat4(1.0f);
+
+
+        block_shader = new Shader("shaders/default/");
         sun_shader = new Shader("shaders/coord/");
+
+        /*monito*/
+        monito_files = new Files("shaders/monito", "assets/textures", "assets/objects");
+        monito_shader = new Shader("shaders/monito/");
+        monito_model = new Model(monito_files, "monito/monito.obj");
+
+		this->monito_MM = glm::mat4(1.0f);
+		this->monito_MM = glm::translate(this->monito_MM, 
+                glm::vec3(0.0f, WATER_LEVEL+10, 0.0f));
+        /*done monito*/
 
         noise = new FBM(worley);
         xChunk = 0;
@@ -93,6 +112,9 @@ public:
         MAP.clear();
         std::cout << "Destroyed " << ms << " chunks from the chunk cache\n";
         delete noise;
+        delete monito_files;
+        delete monito_model;
+        delete monito_shader;
         if(UP) delete UP;
         if(NORTH) delete NORTH;
         if(EAST) delete EAST;
@@ -112,20 +134,36 @@ public:
         return nullptr;
     }
 
-    void on_update(const glm::vec3& pp, Sun*& sun, const glm::mat4& camView) {
-        current_frame++;
+    void on_monito_update(Sun*& sun, const glm::vec3& pp) {
+        monito_shader->useProgram();
+        monito_shader->setVec3("xyz", sun->X(), sun->Y(), sun->Z());
+		monito_shader->setVec3("xyzColor", lightColor);
+		monito_shader->setVec3("xyzView", pp);
+
+		monito_shader->setMat4("model", this->monito_MM);
+		monito_model->Draw(monito_shader);
+    }
+
+    void on_update(glm::vec3 pp, Sun*& sun, const glm::mat4& camView) {
+        current_frame = glfwGetTime();
         block_shader->useProgram();
+        glBindVertexArray(VAO);
+
         if (int(pp[0]/CHUNK_SIDE) != xChunk || int(pp[2]/CHUNK_SIDE) != zChunk) {
-            std::cout << "Chunks cached: " << (MAP.size() * sizeof(Chunk))/1000000.0f << "MB\n";
             //update xChunk and zChunk
             xChunk =int(pp[0]/CHUNK_SIDE);
             zChunk =int(pp[2]/CHUNK_SIDE);
             chunk_update();
             generate_chunks();
         }
+
         sun->X() = 2.0f * (cos(current_frame) + sin(current_frame));
 		sun->Z() = 2.0f * (cos(current_frame) - sin(current_frame));
-        block_shader->setVec3("xyz", sun->X(), sun->Y(), sun->Z());
+
+        std::cout << "(" << sun->X() << ", " << sun->Z() << ")\n";
+
+
+        block_shader->setVec3("xyz", 0, WATER_LEVEL+20, 0);
         block_shader->setVec3("xyzColor", lightColor);
         block_shader->setMat4("xyzView", camView);
 
@@ -134,6 +172,7 @@ public:
             chunk_draw_call(c->Data(), c->heightmap);
         }
         on_sun_update(sun);
+        on_monito_update(sun, pp);
     }
 
 
@@ -149,6 +188,8 @@ public:
             block_shader->setMat4("proj", projection);
             sun_shader->useProgram();
             sun_shader->setMat4("proj", projection);
+            monito_shader->useProgram();
+            monito_shader->setMat4("proj", projection);
         }
     }
 
@@ -157,6 +198,8 @@ public:
         block_shader->setMat4("view",view); 
         sun_shader->useProgram();
         sun_shader->setMat4("view",view); 
+        monito_shader->useProgram();
+        monito_shader->setMat4("view", view);
     }
 
     void toggle_wireframe() { this->wireframe = !this->wireframe;};

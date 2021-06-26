@@ -133,7 +133,7 @@ public:
 	ui32 loadTexture(const std::string& textureFile) {
 		ui32 texture;
 		std::string fileName = path->tp(textureFile);
-        std::cout << " [LOADING TEXTURE FROM ] " << fileName << "\n";
+        std::cout << " [LOADING TEXTURE FROM] " << fileName << "\n";
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

@@ -13,7 +13,7 @@ uniform sampler2D texture1;
 // PHONG LIGHT
 void main() {
 	// ambient
-	float strength = 0.3;
+	float strength = 0.1;
 	vec3 ambient   = strength * xyzColor;
 
 	// diffuse
@@ -23,7 +23,7 @@ void main() {
 	vec3  diffuse  = diff * xyzColor;
 
 	// specular
-	float specularStrength = 0.5;
+	float specularStrength = 0.2;
 	vec3  viewDir          = normalize(xyzView - fragPos);
 	vec3  reflectDir       = reflect(-lightDir, norm);
 	float spec             = pow(max(dot(viewDir, reflectDir), 0.0), 32);
