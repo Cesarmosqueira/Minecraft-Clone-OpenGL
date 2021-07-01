@@ -7,23 +7,13 @@ class Sun : public Block {
 public:
     Sun(const glm::vec3& pp) : Block() {
         this->init(pp[1], pp[0], pp[2]+10, true, 'D');
-        this->model = glm::scale(this->model, {30,30,30});
     }
     
     void rotation (){
-        i8 ex = 0;
-        if(ex < 5) {
-            ex++;
-            model = glm::translate(model, glm::vec3(1, 0, 0));
-        } else {
-            ex--;
-            model = glm::translate(model, glm::vec3(-1, 0, 0));
-        }
-        //std::cout << ex << "\n";
-
-
+        this->model = glm::mat4(1.0f);
+        this->model = glm::scale(this->model, {30,30,30});
+        this->model = glm::translate(this->model, {this->X(), this->Y(), this->Z()});
     }
-
 };
 
 #endif

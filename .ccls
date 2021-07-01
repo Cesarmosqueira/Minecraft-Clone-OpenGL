@@ -2,3 +2,5 @@ clang++
 %c %cpp %h %hpp
 -Iinclude/
 -Idependencies/
+-Idependencies/imgui
+-Idependencies/gui/backends

@@ -73,7 +73,6 @@ class Model {
 					|| !scene->mRootNode) {
 				std::cerr << "ERROR::Assimp::"
 					<< importer.GetErrorString() << std::endl;
-				return;
 			}
 			processNode(scene->mRootNode, scene);
 		}

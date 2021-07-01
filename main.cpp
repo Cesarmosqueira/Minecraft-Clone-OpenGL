@@ -5,8 +5,7 @@
 void m() {
     SandBox sb; 
     while (sb.open()) {
-        sb.on_update();
-        sb.on_gui_update();
+        sb.on_update(true);
 	}
 	return;
 } 

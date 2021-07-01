@@ -1,7 +1,9 @@
 #ifndef __GLUTIL_H__
 #define __GLUTIL_H__
 
-#include <glad/glad.h>
+#include <GLES2/gl2.h>
+#include <GL/glew.h>            // Initialize with glewInit()
+
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -32,11 +34,19 @@ typedef unsigned short int ui16;
 typedef unsigned int       ui32;
 typedef unsigned long long ui64;
 
+static void glfw_error_callback(int error, const char* description)
+{
+    fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
 
 GLFWwindow* glutilInit(i32 major, i32 minor,
 		i32 width, i32 height,
 		const i8* title) {
-	glfwInit();
+
+     glfwSetErrorCallback(glfw_error_callback);
+     if (!glfwInit())
+         return nullptr;
+
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, major);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -48,14 +58,14 @@ GLFWwindow* glutilInit(i32 major, i32 minor,
 		return nullptr;
 	}
 
-
-
 	glfwMakeContextCurrent(window);
+    glfwSwapInterval(1); // Enable vsync
 
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		std::cerr << "Not GLAD at all!\n";
-		return nullptr;
-	}
+    if (glewInit() != GLEW_OK)
+    {
+        fprintf(stderr, "Failed to initialize OpenGL loader!\n");
+        return nullptr;
+    }
 
 	return window;
 }
@@ -75,12 +85,12 @@ public:
 		std::string vertexSrc;
         std::cout << "[VS] Compiling from " << path->sp("shader.vert") << "\n";
 		std::getline(vertexFile, vertexSrc, '\0');
-        std::cout << vertexSrc << "\n";
+        //std::cout << vertexSrc << "\n";
 		std::ifstream fragmentFile(path->sp("shader.frag"));
 		std::string fragmentSrc;
         std::cout << "[FS] Compiling from " << path->sp("shader.frag") << "\n";
 		std::getline(fragmentFile, fragmentSrc, '\0');
-        std::cout << fragmentSrc << "\n";
+        //std::cout << fragmentSrc << "\n";
 		ui32 vertex = mkShader(vertexSrc.c_str(), GL_VERTEX_SHADER);
 		ui32 fragment = mkShader(fragmentSrc.c_str(), GL_FRAGMENT_SHADER);
 
@@ -136,23 +146,24 @@ public:
         std::cout << " [LOADING TEXTURE FROM] " << fileName << "\n";
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		
 		i32 width, height, nrChannels;
 
 		stbi_set_flip_vertically_on_load(true); // porque en opgl el eje Y invertio
-		ui8* data = stbi_load(fileName.c_str(), &width, &height, &nrChannels, 0);
+		ui8* data = stbi_load(fileName.c_str(), &width, &height, &nrChannels, 4);
 		if (data != nullptr) {
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
-			             GL_RGB, GL_UNSIGNED_BYTE, data);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,
+			             GL_RGBA, GL_UNSIGNED_BYTE, data);
 			glGenerateMipmap(GL_TEXTURE_2D);
 		} else {
 			std::cerr << "Can't load texture\n";
 		}
-		stbi_image_free(data);
+        if ( data )
+            stbi_image_free(data);
         
 		return texture;
 	}

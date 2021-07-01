@@ -10,9 +10,6 @@ void framebuffer_size_callback(GLFWwindow* window, i32 width, i32 height) {
 }
 
 void processInput(GLFWwindow* window) {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-		glfwSetWindowShouldClose(window, true);
-	}
 
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
 		//position -= speed * front;
@@ -41,6 +38,11 @@ void processInput(GLFWwindow* window) {
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        MC::GUI_ON = !MC::GUI_ON;
+	}
+
     if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {
         MC::toggle_wireframe = true;
     }
@@ -51,13 +53,17 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         MC::shifting = false;
     }
 
+}
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
     // for hidden/enable the cursor con the screen
-	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
         MC::pressed_cursor = true;
-	}
 }
 
+
 void mouse_callback(GLFWwindow* window, double xpos, double ypos){
+    if(MC::CURSOR_ON) return;
     if(Cam::firstMouse) {
         Cam::lastx = xpos;
         Cam::lasty = ypos;

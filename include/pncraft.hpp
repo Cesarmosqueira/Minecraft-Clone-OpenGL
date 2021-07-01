@@ -1,9 +1,9 @@
 #include "renderer/Konstants.hpp"
 #include "renderer/IndexBuffer.hpp"
 #include "resources/Chunk.hpp"
-#include "renderer/Model.hpp"
-#include "util/Files.hpp"
+#include "resources/NPC.hpp"
 #include <vector>
+#include <climits>
 
 
 class World {
@@ -11,18 +11,14 @@ public:
     bool wireframe;
 private:
     Shader* block_shader;   
-    Shader* sun_shader;
 
-    /* Monito */
-    Shader* monito_shader;
-    Model* monito_model;
-    Files* monito_files;
-    glm::mat4 monito_MM;
+    /* NPC */
+    NPC* godzilla;
+
 
     ui32 view_distance;
     ui32 DirtTexture, WaterTexture; 
     ui32 SandTexture, SunTexture;
-
     ui32 GrassTopTexture, GrassSideTexture;
     ui32 VAO, VBO; 
     i32 BUFFER_W, BUFFER_H;
@@ -44,6 +40,7 @@ private:
     glm::mat4 projection;
     glm::vec3 lightColor;
 
+
     Chunk* current_chunk, *chunk_aux;
 
     f32 max_h;
@@ -57,23 +54,19 @@ public:
 
 
         block_shader = new Shader("shaders/default/");
-        sun_shader = new Shader("shaders/coord/");
 
-        /*monito*/
-        monito_files = new Files("shaders/monito", "assets/textures", "assets/objects");
-        monito_shader = new Shader("shaders/monito/");
-        monito_model = new Model(monito_files, "monito/monito.obj");
 
-		this->monito_MM = glm::mat4(1.0f);
-		this->monito_MM = glm::translate(this->monito_MM, 
-                glm::vec3(0.0f, WATER_LEVEL+10, 0.0f));
-        /*done monito*/
+        /*NPC*/
+        godzilla = new NPC();
+        godzilla->pos = {0, 18, 0};
+        godzilla->scale_value = 0.103f;
+        /*done NPC*/
 
         noise = new FBM(worley);
         xChunk = 0;
         zChunk = 0;
 
-        chunking = 5;
+        chunking = 9;
         max_h = CHUNK_HEIGHT - CHUNK_HEIGHT/4.0f;
         chunk_update();
         generate_chunks();
@@ -93,7 +86,8 @@ public:
 
         SandTexture = block_shader->loadTexture("blocks/sand.jpg");
 
-        SunTexture = block_shader->loadTexture("sun.jpg");
+
+
 
         lightColor = {1.0f, 1.0f, 1.0f};
 
@@ -111,10 +105,11 @@ public:
         }
         MAP.clear();
         std::cout << "Destroyed " << ms << " chunks from the chunk cache\n";
+
+        //GLuint texs[] = { DirtTexture, WaterTexture,SandTexture, SunTexture,GrassTopTexture, GrassSideTexture};
+        //glDeleteTextures(sizeof(texs)/sizeof(GLuint), texs);
         delete noise;
-        delete monito_files;
-        delete monito_model;
-        delete monito_shader;
+        delete godzilla;
         if(UP) delete UP;
         if(NORTH) delete NORTH;
         if(EAST) delete EAST;
@@ -125,6 +120,24 @@ public:
         if(block_shader) delete block_shader;
     }
 
+    /* FOR GUI PURPOSES */
+    i32& get_chunking(){
+        return chunking;
+    }
+    glm::vec3& get_monopos(){
+        return godzilla->pos;
+    }
+    float u_starting_specular = 15.0f;
+    float u_starting_ambient = 15.0f;
+    float u_minimum_ambient = 1.0f;
+    
+    f32& godzilla_scale() { return godzilla->scale_value;}
+    f32& godzilla_specular(){ return godzilla->u_starting_specular;}
+    f32& godzilla_ambient(){ return godzilla->u_starting_ambient;}
+    f32& godzilla_min_ambient(){ return godzilla->u_minimum_ambient;}
+
+    /* END OF FOR GUI PURPOSES  XD */
+
     static Chunk* find_chunk(const std::vector<Chunk*>& vec, const i32& x, const i32& z){
         for(Chunk* c : vec){
             if (c->X() == x && c->Z() == z){
@@ -133,19 +146,10 @@ public:
         }
         return nullptr;
     }
+        
 
-    void on_monito_update(Sun*& sun, const glm::vec3& pp) {
-        monito_shader->useProgram();
-        monito_shader->setVec3("xyz", sun->X(), sun->Y(), sun->Z());
-		monito_shader->setVec3("xyzColor", lightColor);
-		monito_shader->setVec3("xyzView", pp);
-
-		monito_shader->setMat4("model", this->monito_MM);
-		monito_model->Draw(monito_shader);
-    }
-
-    void on_update(glm::vec3 pp, Sun*& sun, const glm::mat4& camView) {
-        current_frame = glfwGetTime();
+    void on_update(glm::vec3 pp, const glm::mat4& camView) {
+        current_frame = (current_frame+1) % (INT_MAX-6);
         block_shader->useProgram();
         glBindVertexArray(VAO);
 
@@ -157,22 +161,21 @@ public:
             generate_chunks();
         }
 
-        sun->X() = 2.0f * (cos(current_frame) + sin(current_frame));
-		sun->Z() = 2.0f * (cos(current_frame) - sin(current_frame));
-
-        std::cout << "(" << sun->X() << ", " << sun->Z() << ")\n";
-
-
-        block_shader->setVec3("xyz", 0, WATER_LEVEL+20, 0);
+        block_shader->setVec3("xyz", godzilla->pos);
         block_shader->setVec3("xyzColor", lightColor);
         block_shader->setMat4("xyzView", camView);
 
         glPolygonMode( GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+        block_shader->useProgram();
+
+        block_shader->setFloat("u_starting_ambient", u_starting_ambient);
+        block_shader->setFloat("u_starting_specular", u_starting_specular);
+        block_shader->setFloat("u_minimum_ambient", u_minimum_ambient);
+
         for(Chunk* c : chunks){
             chunk_draw_call(c->Data(), c->heightmap);
         }
-        on_sun_update(sun);
-        on_monito_update(sun, pp);
+        godzilla->on_update(pp, lightColor);
     }
 
 
@@ -186,20 +189,17 @@ public:
 
             block_shader->useProgram();
             block_shader->setMat4("proj", projection);
-            sun_shader->useProgram();
-            sun_shader->setMat4("proj", projection);
-            monito_shader->useProgram();
-            monito_shader->setMat4("proj", projection);
+            
+            godzilla->send_proj(projection);
+
         }
     }
 
     void send_view_mat(const glm::mat4& view) {
         block_shader->useProgram();
         block_shader->setMat4("view",view); 
-        sun_shader->useProgram();
-        sun_shader->setMat4("view",view); 
-        monito_shader->useProgram();
-        monito_shader->setMat4("view", view);
+
+        godzilla->send_view(view);
     }
 
     void toggle_wireframe() { this->wireframe = !this->wireframe;};
@@ -220,6 +220,9 @@ private:
         if ( data[y][x][z].is_solid() ) {
             ui8 code = data[y][x][z].get_TexCode();
             if(code != 'G'){
+                block_shader->setVec3("xyzBlock", { data[y][x][z].X(),
+                                                    data[y][x][z].Y(),
+                                                    data[y][x][z].Z() });
                 glBindTexture(GL_TEXTURE_2D, code_to_tex(code));
 
                 face_draw_call(data,    UP, x,y,z , 'U');
@@ -229,6 +232,11 @@ private:
                 face_draw_call(data, SOUTH, x,y,z , 'S');
                 if(y > 1) face_draw_call(data,  DOWN, x,y,z , 'D');
             } else {
+                block_shader->setVec3("xyzBlock", { data[y][x][z].X(),
+                                                    data[y][x][z].Y(),
+                                                    data[y][x][z].Z() });
+
+
 
                 glBindTexture(GL_TEXTURE_2D, GrassTopTexture);
                 face_draw_call(data,    UP, x,y,z , 'U');
@@ -245,24 +253,7 @@ private:
             }
         }
     }
-    void on_sun_update(Sun*& sun) {
-        sun_shader->useProgram();
-        sun->rotation();
-        sun_shader->setMat4("model", sun->model);
-        glBindTexture(GL_TEXTURE_2D, SunTexture);
-        NORTH->bind();
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        EAST->bind();
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        UP->bind();
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        DOWN->bind();
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        WEST->bind();
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        SOUTH->bind();
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    }
+
     ui32 code_to_tex(const ui8& code){
         switch(code){
         case 'W': return WaterTexture;

@@ -1,5 +1,5 @@
 mkdir bin
 make clean
 make stbi
-make glad
+make imgui
 make znoise
