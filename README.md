@@ -1,5 +1,8 @@
 # Minecraft-Clone-OpenGL
-<b>To exec:</b>
+# Video Funcionalidad:
+  <a href="https://youtu.be/IqDn1f2CQKE">https://youtu.be/IqDn1f2CQKE</a>
+  
+# <b>To exec:</b>
 ```bash
 git clone https://github.com/Cesarmosqueira/Minecraft-Clone-OpenGL.git
 cd Minecraft-Clone-OpenGL
@@ -17,11 +20,10 @@ cd Minecraft-Clone-OpenGL
 <kbd>Mouse2</kbd> <b> Toggle cursor view<b/><br>
 <kbd>ESC</kbd> <b> Toggle GUI mode <b/>
 
-# Important Note:
-**BUY MORE RAM**
-  
+
 # Screenshots
-  ![image](https://user-images.githubusercontent.com/48858334/124049236-a558eb80-d9dd-11eb-8063-6703908468c9.png)
+  ![image](https://user-images.githubusercontent.com/48858334/124336802-20004300-db65-11eb-989a-95e15dc3df8e.png)
+![image](https://user-images.githubusercontent.com/48858334/124336821-3f976b80-db65-11eb-9afd-c24c3236abbd.png)
 
 
 
