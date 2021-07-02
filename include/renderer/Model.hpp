@@ -58,12 +58,14 @@ class Model {
 
 		void Draw(Shader* shader) {
 			for (ui32 i = 0; i < meshes.size(); ++i) {
+                shader->setVec3("CoordColor", meshes[i].CoordColor);
 				meshes[i].Draw(shader);
 			}
 		}
 	private:
 		void loadModel(std::string const& fileName) {
 			Assimp::Importer importer;
+            std::cout << "-> Ladoading model from '" << fileName << "' <-\n";
 			const aiScene* scene = importer.ReadFile(fileName,
 					aiProcess_Triangulate
 					| aiProcess_GenSmoothNormals
@@ -122,6 +124,11 @@ class Model {
 				}
 			}
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+            aiColor3D scene_color(0.f,0.f,0.f);
+            material->Get(AI_MATKEY_COLOR_DIFFUSE, scene_color);
+            std::cout << "Color: " << scene_color.r << ", " <<
+                                      scene_color.g << ", " << 
+                                      scene_color.b << "\n";
 			std::vector<Texture> diffuseMaps = loadMaterialTextures(material,
 					aiTextureType_DIFFUSE, "texture_diffuse");
 			textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
@@ -135,7 +142,8 @@ class Model {
 					aiTextureType_AMBIENT, "texture_height");
 			textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
-			return Mesh(vertices, indices, textures);
+			return Mesh(vertices, indices, textures, 
+                    scene_color.r, scene_color.b, scene_color.b);
 		}
 
 		std::vector<Texture> loadMaterialTextures(aiMaterial* mat,

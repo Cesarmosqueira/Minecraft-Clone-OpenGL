@@ -1,20 +1,24 @@
 #include "renderer/Konstants.hpp"
 #include "renderer/IndexBuffer.hpp"
 #include "resources/Chunk.hpp"
-#include "resources/NPC.hpp"
+#include "resources/Object.hpp"
 #include <vector>
 #include <climits>
+#define GEN_TYPE 'W'
 
 
 class World {
 public:
     bool wireframe;
+    f32 SunSpeed = 0.05f, SunWide = 48.0f;
 private:
     Shader* block_shader;   
 
-    /* NPC */
-    NPC* godzilla;
-
+    /* Object */
+    Object* godzilla, *sunobj; 
+    Object *tree;
+    Object* monito;
+    std::vector<glm::vec3> tree_positions;
 
     ui32 view_distance;
     ui32 DirtTexture, WaterTexture; 
@@ -35,6 +39,7 @@ private:
     std::vector<Chunk*> MAP;
 
     Worley worley;
+    Simplex simplex; 
     FBM* noise;
 
     glm::mat4 projection;
@@ -51,25 +56,50 @@ private:
 public:
     World() {
         projection = glm::mat4(1.0f);
-
+        ui32 n_trees = 5;
 
         block_shader = new Shader("shaders/default/");
 
 
-        /*NPC*/
-        godzilla = new NPC();
-        godzilla->pos = {0, 18, 0};
+        /*Object*/
+        //Godzilla
+        godzilla = new Object("shaders/mob/", "goodModel/" , "GodzillaLegendaryRigged.obj", "GodzillaTexture.png");
+        godzilla->pos = {-20, 18, 5};
         godzilla->scale_value = 0.103f;
-        /*done NPC*/
+        //Sun 
+        sunobj = new Object("shaders/coord/", "salsolcito/", "Sunmodel.obj", "sun.jpg");
+        sunobj->pos = {0, 65, 0};
+        sunobj->scale_value = 20.0f;
 
-        noise = new FBM(worley);
+        //Monito 
+        monito = new Object("shaders/mob/", "monito/", "monito.obj", "rubik.jpg");
+        monito->pos = {0, 36, 0};
+        monito->scale_value = 2.0f;
+        //5Trees
+        tree = new Object("shaders/tree/", "tree/" , "Lowpoly_tree_sample.obj", "None");
+        tree->pos = {20, 29, 5};
+        tree->scale_value = 0.3f;
+        /*done Object*/
+        
+        if(GEN_TYPE == 'W') {
+            noise = new FBM(worley);
+        } else if (GEN_TYPE == 'S'){
+            noise = new FBM(simplex);
+        }
         xChunk = 0;
         zChunk = 0;
 
-        chunking = 9;
+        chunking = 5;
         max_h = CHUNK_HEIGHT - CHUNK_HEIGHT/4.0f;
         chunk_update();
         generate_chunks();
+
+        for(ui8 i = 0 ; i < n_trees; i++) {
+            ui32 j = rand() % CHUNK_SIDE;
+            ui32 k = rand() % CHUNK_SIDE;
+            ui32 h = current_chunk->heightmap[j][k];
+            tree_positions.push_back({j, h + 5, k});
+        }
         
         view_distance = 48;
         this->wireframe = false;
@@ -85,8 +115,6 @@ public:
         WaterTexture = block_shader->loadTexture("blocks/water.jpg");
 
         SandTexture = block_shader->loadTexture("blocks/sand.jpg");
-
-
 
 
         lightColor = {1.0f, 1.0f, 1.0f};
@@ -110,6 +138,9 @@ public:
         //glDeleteTextures(sizeof(texs)/sizeof(GLuint), texs);
         delete noise;
         delete godzilla;
+        delete sunobj;
+        delete monito;
+        delete block_shader;
         if(UP) delete UP;
         if(NORTH) delete NORTH;
         if(EAST) delete EAST;
@@ -117,25 +148,47 @@ public:
         if(EAST) delete EAST;
         if(SOUTH) delete SOUTH;
         if(DOWN) delete DOWN;
-        if(block_shader) delete block_shader;
     }
 
     /* FOR GUI PURPOSES */
+    void rearrange_trees() {
+        for(glm::vec3& p : tree_positions) {
+            ui32 j = rand() % CHUNK_SIDE;
+            ui32 k = rand() % CHUNK_SIDE;
+            ui32 h = current_chunk->heightmap[j][k];
+            p = {j, h + 5, k};
+        }
+    }
     i32& get_chunking(){
         return chunking;
     }
-    glm::vec3& get_monopos(){
-        return godzilla->pos;
+    glm::vec3& get_lsrc_pos(){
+        return sunobj->pos;
     }
-    float u_starting_specular = 15.0f;
-    float u_starting_ambient = 15.0f;
-    float u_minimum_ambient = 1.0f;
+    float u_starting_specular = 100.0f;
+    float u_starting_ambient = 80.0f;
+    float u_minimum_ambient = 50.0f;
     
     f32& godzilla_scale() { return godzilla->scale_value;}
     f32& godzilla_specular(){ return godzilla->u_starting_specular;}
     f32& godzilla_ambient(){ return godzilla->u_starting_ambient;}
     f32& godzilla_min_ambient(){ return godzilla->u_minimum_ambient;}
+    glm::vec3& get_godzilla_pos() {return godzilla->pos; }
 
+    f32& monito_scale() { return monito->scale_value;}
+    f32& monito_specular(){ return monito->u_starting_specular;}
+    f32& monito_ambient(){ return monito->u_starting_ambient;}
+    f32& monito_min_ambient(){ return monito->u_minimum_ambient;}
+    glm::vec3& get_monito_pos() {return monito->pos; }
+
+
+    f32& tree_scale() { return tree->scale_value;}
+    f32& tree_specular(){ return tree->u_starting_specular;}
+    f32& tree_ambient(){ return tree->u_starting_ambient;}
+    f32& tree_min_ambient(){ return tree->u_minimum_ambient;}
+    glm::vec3& get_tree_pos() {return tree->pos; }
+
+    f32& sun_scale() { return sunobj->scale_value;}
     /* END OF FOR GUI PURPOSES  XD */
 
     static Chunk* find_chunk(const std::vector<Chunk*>& vec, const i32& x, const i32& z){
@@ -160,8 +213,16 @@ public:
             chunk_update();
             generate_chunks();
         }
+        
+        monito->pos.x = 65*sin(current_frame*0.01);
+        monito->pos.y = 10*sin(current_frame*0.1) + WATER_LEVEL + 20;
+        monito->pos.z = 65*cos(current_frame*0.01);
+        sunobj->pos.x = SunWide*sin(current_frame*SunSpeed);
+        sunobj->pos.z = SunWide*cos(current_frame*SunSpeed);
 
-        block_shader->setVec3("xyz", godzilla->pos);
+
+
+        block_shader->setVec3("xyz", sunobj->pos);
         block_shader->setVec3("xyzColor", lightColor);
         block_shader->setMat4("xyzView", camView);
 
@@ -175,7 +236,12 @@ public:
         for(Chunk* c : chunks){
             chunk_draw_call(c->Data(), c->heightmap);
         }
-        godzilla->on_update(pp, lightColor);
+        //godzillas chunk
+        //godzilla->pos.y = find_chunk(chunks, godzilla->pos.x, godzilla->pos.z)->heightmap[int(godzilla->pos.x)][int(godzilla->pos.z)];
+        godzilla->on_update(pp, lightColor, sunobj->pos);
+        tree->on_multiple_update(pp, lightColor, sunobj->pos, tree_positions);
+        monito->on_update(pp, lightColor, sunobj->pos);
+        sunobj->on_draw_call();
     }
 
 
@@ -191,7 +257,9 @@ public:
             block_shader->setMat4("proj", projection);
             
             godzilla->send_proj(projection);
-
+            sunobj->send_proj(projection);
+            tree->send_proj(projection);
+            monito->send_proj(projection);
         }
     }
 
@@ -200,6 +268,9 @@ public:
         block_shader->setMat4("view",view); 
 
         godzilla->send_view(view);
+        sunobj->send_view(view);
+        tree->send_view(view);
+        monito->send_view(view);
     }
 
     void toggle_wireframe() { this->wireframe = !this->wireframe;};
@@ -235,7 +306,6 @@ private:
                 block_shader->setVec3("xyzBlock", { data[y][x][z].X(),
                                                     data[y][x][z].Y(),
                                                     data[y][x][z].Z() });
-
 
 
                 glBindTexture(GL_TEXTURE_2D, GrassTopTexture);
@@ -349,7 +419,7 @@ private:
         Chunk* act = find_chunk(MAP, xChunk, zChunk);
         //if current chunk is in cache already, current is replaced
         if(!act) {
-            act = new Chunk(xChunk, zChunk, noise, max_h);
+            act = new Chunk(xChunk, zChunk, noise, max_h, GEN_TYPE);
         }
         current_chunk = act;
         MAP.push_back(act); //map will store all the chunks ever computed
@@ -363,7 +433,7 @@ private:
             for(i32 j = current_chunk->Z() - chunking; j <= current_chunk->Z() + chunking; j++){
                 chunk_aux = find_chunk(MAP, i, j);
                 if(!chunk_aux) {
-                    chunk_aux = new Chunk(i,j, noise, max_h);
+                    chunk_aux = new Chunk(i,j, noise, max_h, GEN_TYPE);
                     total++;
                     MAP.push_back(chunk_aux);
                 } 

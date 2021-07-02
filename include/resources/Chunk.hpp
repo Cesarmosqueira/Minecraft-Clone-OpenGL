@@ -1,6 +1,7 @@
 #include "resources/Sun.hpp"
 #include "ZNOISE_INCLUDE/Perlin.hpp"
 #include "ZNOISE_INCLUDE/Worley.hpp"
+#include "ZNOISE_INCLUDE/Simplex.hpp"
 #include "ZNOISE_INCLUDE/FBM.hpp"
 #define CHUNK_HEIGHT 128
 #define CHUNK_SIDE 16
@@ -10,13 +11,15 @@ char tex;
 
 class Chunk { 
 public: 
-    Chunk(const i32& _x, const i32& _z, FBM*& noise, const f32& max_h) : XPOS(_x), ZPOS(_z) { 
+    Chunk(const i32& _x, const i32& _z, FBM*& noise, const f32& max_h,
+            const ui8& type) : XPOS(_x), ZPOS(_z) { 
         XOFF = XPOS * CHUNK_SIDE;
         ZOFF = ZPOS * CHUNK_SIDE;
 
         for(i32 x = 0; x < CHUNK_SIDE; x++){
             for(i32 z = 0; z < CHUNK_SIDE; z++){
-                heightmap[x][z] = noise->Get({(float)(x+XOFF),(float)(z+ZOFF)}, 0.0055f) * CHUNK_HEIGHT;
+                heightmap[x][z] = noise->Get({(float)(x+XOFF),(float)(z+ZOFF)}, 
+                        type == 'W' ? 0.0055f : 0.00065f) * CHUNK_HEIGHT;
             }
         }
 

@@ -26,7 +26,7 @@ namespace MC {
     bool toggle_wireframe = false;
     bool shifting = false; 
     bool pressed_cursor = false, CURSOR_ON = false;
-    bool GUI_ON = true;
+    bool GUI_ON = false;
 
 
     f32 deltaTime = 0.0f;

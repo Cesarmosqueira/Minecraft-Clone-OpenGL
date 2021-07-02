@@ -25,12 +25,15 @@ public:
 	std::vector<Vertex>  vertices;
 	std::vector<ui32>     indices;
 	std::vector<Texture> textures;
+    glm::vec3 CoordColor;
 
 	ui32 Vao;
 
 	Mesh(std::vector<Vertex> vertices, std::vector<ui32> indices,
-			std::vector<Texture> textures)
-			: vertices(vertices), indices(indices), textures(textures) {
+			std::vector<Texture> textures,
+            const f32& r, const f32& g, const f32& b)
+			: vertices(vertices), indices(indices), textures(textures), 
+              CoordColor({g,r,b}){
 		setupMesh();
 	}
 
