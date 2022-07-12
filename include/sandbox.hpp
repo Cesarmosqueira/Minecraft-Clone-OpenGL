@@ -93,19 +93,6 @@ private:
         ImGui::SliderFloat("Ambient", (float*)&world->u_starting_specular, 0.0, 100.0f);
         ImGui::SliderFloat("Min Ambient", (float*)&world->u_minimum_ambient, 1.0f, 5.0f);
 
-        ImGui::SliderFloat("GodzillaScale", (float*)&world->godzilla_scale(), 0.0f, 5.0f);
-        ImGui::SliderFloat("Godzilla Ambient", (float*)&world->godzilla_ambient(), 0.0f, 400.0f);
-        ImGui::SliderFloat("Godzilla Specular", (float*)&world->godzilla_specular(), 0.0f, 400.0f);
-        ImGui::SliderFloat("Godzilla Min Ambient", (float*)&world->godzilla_min_ambient(), 0.0f, 400.0f);
-        ImGui::SliderFloat3("Godzilla Pos", (float*)&world->get_godzilla_pos().x, CHUNK_HEIGHT*-2, CHUNK_HEIGHT*2);
-
-        ImGui::SliderFloat("TreeScale", (float*)&world->tree_scale(), 0.0f, 5.0f);
-        ImGui::SliderFloat("Tree Ambient", (float*)&world->tree_ambient(), 0.0f, 400.0f);
-        ImGui::SliderFloat("Tree Specular", (float*)&world->tree_specular(), 0.0f, 400.0f);
-        ImGui::SliderFloat("Tree Min Ambient", (float*)&world->tree_min_ambient(), 0.0f, 400.0f);
-        ImGui::SliderFloat3("Tree Pos", (float*)&world->get_tree_pos().x, CHUNK_HEIGHT*-2, CHUNK_HEIGHT*2);
-        if (ImGui::Button("Re-Arrange trees"))
-            { world->rearrange_trees(); }
         ImGui::SliderFloat("MonitoScale", (float*)&world->monito_scale(), 0.0f, 5.0f);
         ImGui::SliderFloat("Monito Ambient", (float*)&world->monito_ambient(), 0.0f, 400.0f);
         ImGui::SliderFloat("Monito Specular", (float*)&world->monito_specular(), 0.0f, 400.0f);
