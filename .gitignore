@@ -8,7 +8,7 @@ GLFW/
 *.slo
 *.lo
 *.o
-*.obj
+# *.obj
 bin/
 
 # Precompiled Headers
