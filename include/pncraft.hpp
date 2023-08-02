@@ -15,9 +15,8 @@ private:
     Shader* block_shader;   
 
     /* Object */
-    Object* godzilla, *sunobj; 
-    Object *tree;
-    Object* monito;
+    Object *sunobj, * monito;
+    std::vector<Object*> players;
     std::vector<glm::vec3> tree_positions;
 
     ui32 view_distance;
@@ -60,12 +59,7 @@ public:
 
         block_shader = new Shader("shaders/default/");
 
-
-        /*Object*/
-        //Godzilla
-        godzilla = new Object("shaders/mob/", "goodModel/" , "GodzillaLegendaryRigged.obj", "GodzillaTexture.png");
-        godzilla->pos = {-20, 18, 5};
-        godzilla->scale_value = 0.103f;
+        /*Objects*/
         //Sun 
         sunobj = new Object("shaders/coord/", "salsolcito/", "Sunmodel.obj", "sun.jpg");
         sunobj->pos = {0, 65, 0};
@@ -75,11 +69,7 @@ public:
         monito = new Object("shaders/mob/", "monito/", "monito.obj", "rubik.jpg");
         monito->pos = {0, 36, 0};
         monito->scale_value = 2.0f;
-        //5Trees
-        tree = new Object("shaders/tree/", "tree/" , "Lowpoly_tree_sample.obj", "None");
-        tree->pos = {20, 29, 5};
-        tree->scale_value = 0.3f;
-        /*done Object*/
+
         
         if(GEN_TYPE == 'W') {
             noise = new FBM(worley);
@@ -137,7 +127,6 @@ public:
         //GLuint texs[] = { DirtTexture, WaterTexture,SandTexture, SunTexture,GrassTopTexture, GrassSideTexture};
         //glDeleteTextures(sizeof(texs)/sizeof(GLuint), texs);
         delete noise;
-        delete godzilla;
         delete sunobj;
         delete monito;
         delete block_shader;
@@ -151,14 +140,6 @@ public:
     }
 
     /* FOR GUI PURPOSES */
-    void rearrange_trees() {
-        for(glm::vec3& p : tree_positions) {
-            ui32 j = rand() % CHUNK_SIDE;
-            ui32 k = rand() % CHUNK_SIDE;
-            ui32 h = current_chunk->heightmap[j][k];
-            p = {j, h + 5, k};
-        }
-    }
     i32& get_chunking(){
         return chunking;
     }
@@ -169,24 +150,12 @@ public:
     float u_starting_ambient = 80.0f;
     float u_minimum_ambient = 50.0f;
     
-    f32& godzilla_scale() { return godzilla->scale_value;}
-    f32& godzilla_specular(){ return godzilla->u_starting_specular;}
-    f32& godzilla_ambient(){ return godzilla->u_starting_ambient;}
-    f32& godzilla_min_ambient(){ return godzilla->u_minimum_ambient;}
-    glm::vec3& get_godzilla_pos() {return godzilla->pos; }
-
     f32& monito_scale() { return monito->scale_value;}
     f32& monito_specular(){ return monito->u_starting_specular;}
     f32& monito_ambient(){ return monito->u_starting_ambient;}
     f32& monito_min_ambient(){ return monito->u_minimum_ambient;}
     glm::vec3& get_monito_pos() {return monito->pos; }
 
-
-    f32& tree_scale() { return tree->scale_value;}
-    f32& tree_specular(){ return tree->u_starting_specular;}
-    f32& tree_ambient(){ return tree->u_starting_ambient;}
-    f32& tree_min_ambient(){ return tree->u_minimum_ambient;}
-    glm::vec3& get_tree_pos() {return tree->pos; }
 
     f32& sun_scale() { return sunobj->scale_value;}
     /* END OF FOR GUI PURPOSES  XD */
@@ -236,12 +205,17 @@ public:
         for(Chunk* c : chunks){
             chunk_draw_call(c->Data(), c->heightmap);
         }
-        //godzillas chunk
-        //godzilla->pos.y = find_chunk(chunks, godzilla->pos.x, godzilla->pos.z)->heightmap[int(godzilla->pos.x)][int(godzilla->pos.z)];
-        godzilla->on_update(pp, lightColor, sunobj->pos);
-        tree->on_multiple_update(pp, lightColor, sunobj->pos, tree_positions);
-        monito->on_update(pp, lightColor, sunobj->pos);
+
+        monito->on_update(pp, this->lightColor, monito->pos);
+        monito->on_draw_call();
+        sunobj->on_update(pp, this->lightColor, sunobj->pos);
         sunobj->on_draw_call();
+    }
+
+    void on_multiplayer_update(glm::vec3 pp) {
+        for(int i = 0; i < players.size(); i++) {
+            players[i]->on_update(pp, this->lightColor, players[i]->pos);
+        }
     }
 
 
@@ -256,9 +230,7 @@ public:
             block_shader->useProgram();
             block_shader->setMat4("proj", projection);
             
-            godzilla->send_proj(projection);
             sunobj->send_proj(projection);
-            tree->send_proj(projection);
             monito->send_proj(projection);
         }
     }
@@ -267,9 +239,7 @@ public:
         block_shader->useProgram();
         block_shader->setMat4("view",view); 
 
-        godzilla->send_view(view);
         sunobj->send_view(view);
-        tree->send_view(view);
         monito->send_view(view);
     }
 

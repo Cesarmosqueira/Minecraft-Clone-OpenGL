@@ -1,0 +1,24 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-std=c++17",
+      "-pedantic",
+      "-Wall",
+      "-O3",
+      "-I",
+      "include/",
+      "-I",
+      "dependencies/",
+      "-Idependencies/imgui",
+      "-g",
+      "-o",
+      "bin/main.o",
+      "main.cpp"
+    ],
+    "directory": "/home/g/Documents/Minecraft-Clone-OpenGL",
+    "file": "/home/g/Documents/Minecraft-Clone-OpenGL/main.cpp",
+    "output": "/home/g/Documents/Minecraft-Clone-OpenGL/bin/main.o"
+  }
+]
